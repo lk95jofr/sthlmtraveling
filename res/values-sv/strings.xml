@@ -77,6 +77,7 @@
     <string name="arriving_by">Anländer senast <xliff:g id="time">%s</xliff:g> den <xliff:g id="date">%s</xliff:g></string>
     <string name="departures">Avgångar</string>
     <string name="departures_for">Avgångar för <xliff:g id="site_name">%s</xliff:g></string>
+    <string name="date_of_trip">Datum för resa: <xliff:g id="date">%s</xliff:g></string>
     <string name="no_departures"><b>Inga avgångar hittades</b>\nEnbart avgångar inom 10 minuter listas. Uppdatera via menyn om ett tag.</string>
     <string name="site_name">Hållplatsnamn</string>
     <string name="stop_label">Hållplats</string>
@@ -86,6 +87,7 @@
     <string name="buses">Bussar</string>
     <string name="trains">Pendeltåg</string>
     <string name="trams">Lokalbana</string>
+    <string name="tram_cars">Spårvagn</string>
     <string name="now">Nu</string>
     <string name="journey_planner_label">Reseplanerare</string>
     <string name="crash_report_mail_subject">STHLM Traveling Crash Report</string><!-- Do not translate -->
@@ -107,7 +109,7 @@
     <string name="share_label">Dela med andra</string>
     <string name="sms_ticket_label">SMS-Biljett</string>
     <string name="sms_ticket_price_reduced">Reducerat pris</string>
-    <string name="sms_ticket_price_full">Helt pris</string>
+    <string name="sms_ticket_price_full">Helt pris (20-64 år)</string>
     <string name="sms_ticket_notice_message">Den här funtionen är experimentell. Dubbelkolla detaljerna innan du köper din biljett. STHLM Traveling lämnar inga garantier för att biljetten stämmer med resan.</string>
     <string name="trip_description_walk">%s - %s Gå från %s till %s</string>
     <string name="trip_description_normal">%s - %s %s från %s mot %s. Kliv av vid %s</string>

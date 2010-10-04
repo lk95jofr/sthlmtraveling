@@ -19,11 +19,8 @@ package com.markupartist.sthlmtraveling.provider.planner;
 import static com.markupartist.sthlmtraveling.provider.ApiConf.KEY;
 import static com.markupartist.sthlmtraveling.provider.ApiConf.apiEndpoint;
 import static com.markupartist.sthlmtraveling.provider.ApiConf.get;
-import static com.markupartist.sthlmtraveling.provider.ApiConf.plannerEndpoint;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -33,18 +30,14 @@ import java.util.Date;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.xml.sax.InputSource;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.os.Parcelable.Creator;
 import android.util.Log;
 
 import com.markupartist.sthlmtraveling.R;
@@ -382,6 +375,7 @@ public class Planner {
         }
 
         public String toText() {
+/*<<<<<<< HEAD
         	String durationInMinutes = duration;
         	try {
 	            DateFormat df = new SimpleDateFormat("H:mm");
@@ -401,6 +395,27 @@ public class Planner {
         	String sDepartureDate = departureDate.substring(0, end).replace(".", "/");
 
             return departureTime + " - " + arrivalTime + " (" + durationInMinutes + ") " + sDepartureDate;
+=======*/
+            String durationInMinutes = duration;
+            try {
+                DateFormat df = new SimpleDateFormat("H:mm");
+                Date tripDate = df.parse(duration);
+                if (tripDate.getHours() == 0) {
+                    int start = duration.indexOf(":") + 1;
+                    if (duration.substring(start).startsWith("0")) {
+                        start++;
+                    }
+                    durationInMinutes = duration.substring(start) + " min";
+                }
+            } catch (ParseException e) {
+            }
+
+            /*int end = departureDate.lastIndexOf(".");
+            String departureDateString =
+                departureDate.substring(0, end).replace(".", "/");*/
+
+            return String.format("%s - %s (%s)",
+                    departureTime, arrivalTime, durationInMinutes);
         }
 
         public static final Creator<Trip2> CREATOR = new Creator<Trip2>() {

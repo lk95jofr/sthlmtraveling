@@ -34,6 +34,9 @@ Developers
 If you want to contribute to this project just send me a email, tweet or just
 fork the app. I will do my best help you out if you have any problems.
 
+Please follow the [Code Style Guidelines for Contributors](http://source.android.com/source/code-style.html)
+for Android except for line length that should be kept to 80 colums where possible.  
+
 ### Run tests
 
 To be able to run the tests from Eclipse follow these instructions. Assumes
@@ -68,22 +71,31 @@ STHLM Traveling is open source and licensed under
 
 Changelog
 ---------
-* NEXT
-    * Make sure tasks are canceled when user leaves the RoutesActivity, closes #27
-    * Also fixed bug when restoring GetEarlierRoutesTask, closes #17
+* 2.1.0
+    * Using default Theme in preferences because [issue](http://twitter.com/johanni/status/26117527135) with Sony Ericsson devices.
+    * Date of Trip added to the detailed view.
+    * New arrows and clock icons in the journey planner by [Sara Smedman](http://joforik.net/).
+    * Spanish translation by Fredrik Jönsson.
+    * SMS tickets is back, now with price and extra information. Patch by [Adam Nybäck](http://anyro.se/).
+    * Increased text sizes and margins.
+    * Invalid encoding for origin and destination name in the detailed
+      result, closes [#25](http://github.com/johannilsson/sthlmtraveling/issues#issue/25).
+    * Replaced the token MY_LOCATION with a localized string in the detailed
+      result, closes [#35](http://github.com/johannilsson/sthlmtraveling/issues#issue/35). 
+    * Possibility to change install location (Install on SD card), closes [#34](http://github.com/johannilsson/sthlmtraveling/issues#issue/34).
+    * Make sure tasks are canceled when user leaves the RoutesActivity, closes [#27](http://github.com/johannilsson/sthlmtraveling/issues#issue/27).
+    * Fixed bug when restoring GetEarlierRoutesTask, closes [#17](http://github.com/johannilsson/sthlmtraveling/issues#issue/17).
     * Fixed issue with MY_LOCATION being added to the text input when selecting
-      an item from the history, thanks droidgren. Closes #25
+      an item from the history, thanks droidgren. Closes [#25](http://github.com/johannilsson/sthlmtraveling/issues#issue/25)
     * Improved error handling when the DeparturesActivity got restored after an
-      orientation change. This closes #16 and as a side effect is also closes #11.  
+      orientation change. This closes [#16](http://github.com/johannilsson/sthlmtraveling/issues#issue/16) and as a side effect is also closes [#11](http://github.com/johannilsson/sthlmtraveling/issues#issue/11).  
 * 2.0.0
     * Search history is visible in the "get" dialog direct
     * Address search integrated in auto completion
     * Reworked history to allow storage of latitude and longitude
     * Various layout fixes 
-* 2.0.0RC4
     * New traffic status view
     * Fixed my location bug
-* 2.0.0RC3
     * Complete rewrite of the journey planner, new backend etc
     * Various icons has been replaced creds to Olof Brickarp
     * Changed to use SL standard icons for transports (with their permission)

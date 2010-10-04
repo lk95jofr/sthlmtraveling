@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.markupartist.sthlmtraveling"
-      android:versionCode="54" android:versionName="2.0.0">
+      android:versionCode="55"
+      android:versionName="2.1.0RC1"
+      android:installLocation="auto"
+      >
     <supports-screens
         android:largeScreens="true"
         android:normalScreens="true"
@@ -120,7 +123,9 @@
         </activity>
         <activity android:name=".SettingsActivity"
                   android:label="@string/title_settings"
-                  android:configChanges="locale"></activity>
+                  android:configChanges="locale"
+                  android:theme="@style/android:style/Theme"
+                  ></activity>
         <receiver android:name=".receivers.OnBootReceiver"
                   android:enabled="true" 
                   android:exported="false">
@@ -137,7 +142,7 @@
                   android:exported="false"
          />
 </application>
-    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="7" />
+    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="8" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

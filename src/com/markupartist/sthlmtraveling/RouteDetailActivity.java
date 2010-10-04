@@ -16,6 +16,9 @@
 
 package com.markupartist.sthlmtraveling;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -26,7 +29,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -80,15 +82,25 @@ public class RouteDetailActivity extends ListActivity {
         TextView endPointView = (TextView) findViewById(R.id.route_to);
         endPointView.setText(mJourneyQuery.destination.name);
 
-        if (mJourneyQuery.origin.isMyLocation()) {
-            startPointView.setText(getMyLocationString(mJourneyQuery.origin));
-        }
-        if (mJourneyQuery.destination.isMyLocation()) {
-            endPointView.setText(getMyLocationString(mJourneyQuery.destination));
-        }
+        startPointView.setText(getLocationName(mJourneyQuery.origin));
+        endPointView.setText(getLocationName(mJourneyQuery.destination));
 
-        TextView dateTimeView = (TextView) findViewById(R.id.route_date_time);
-        dateTimeView.setText(mTrip.toText());
+        // TODO: We should parse the date when getting the results and store a
+        // Time object instead.
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yy");
+        Date date = null;
+        try {
+            date = format.parse(mTrip.departureDate);
+        } catch (ParseException e) {
+            ;
+        }
+        SimpleDateFormat otherFormat = new SimpleDateFormat("yyyy-MM-dd");
+        TextView dateView = (TextView) findViewById(R.id.route_date_of_trip);
+        if (date != null) {
+            dateView.setText(getString(R.string.date_of_trip, otherFormat.format(date)));
+        } else {
+            dateView.setVisibility(View.GONE);
+        }
 
         FavoriteButtonHelper favoriteButtonHelper = new FavoriteButtonHelper(
                 this, mFavoritesDbAdapter, mJourneyQuery.origin,
@@ -127,12 +139,18 @@ public class RouteDetailActivity extends ListActivity {
      * @param location the stop
      * @return a text representation of my location
      */
-    private CharSequence getMyLocationString(Planner.Location location) {
-        CharSequence string = getText(R.string.my_location);
+    private CharSequence getLocationName(Planner.Location location) {
+        if (location == null) {
+            return "Unknown";
+        }
+        if (location.isMyLocation()) {
+            return getText(R.string.my_location);
+        }
+        return location.name;
+
         /*if (location.getLocation() != null) {
             string = String.format("%s (%sm)", string, location.getLocation().getAccuracy());
         }*/
-        return string;
     }
 
     /**
@@ -251,8 +269,8 @@ public class RouteDetailActivity extends ListActivity {
         switch(id) {
         case DIALOG_BUY_SMS_TICKET:
             CharSequence[] smsOptions = {
-                    getText(R.string.sms_ticket_price_full), 
-                    getText(R.string.sms_ticket_price_reduced)
+                    getText(R.string.sms_ticket_price_full) + " " + getFullPrice(), 
+                    getText(R.string.sms_ticket_price_reduced) + " " + getReducedPrice()
                 };
             return new AlertDialog.Builder(this)
                 .setTitle(getText(R.string.sms_ticket_label))
@@ -270,6 +288,16 @@ public class RouteDetailActivity extends ListActivity {
                 }).create();
         }
         return null;
+    }
+
+    private CharSequence getFullPrice() {
+        final int[] PRICE = new int[] { 30, 45, 60 };
+        return PRICE[mTrip.tariffZones.length() - 1] + " kr";
+    }
+
+    private CharSequence getReducedPrice() {
+        final int[] PRICE = new int[] { 18, 27, 36 };
+        return PRICE[mTrip.tariffZones.length() - 1] + " kr";
     }
 
     /**
@@ -323,7 +351,7 @@ public class RouteDetailActivity extends ListActivity {
 
         Intent intent = new Intent(this, ViewOnMapActivity.class);
         intent.putExtra(ViewOnMapActivity.EXTRA_LOCATION, l);
-        intent.putExtra(ViewOnMapActivity.EXTRA_MARKER_TEXT, location.name);
+        intent.putExtra(ViewOnMapActivity.EXTRA_MARKER_TEXT, getLocationName(location));
 
         return intent;
     }
@@ -354,15 +382,15 @@ public class RouteDetailActivity extends ListActivity {
                 description = getString(R.string.trip_description_walk,
                         "<b>" + subTrip.departureTime + "</b>",
                         "<b>" + subTrip.arrivalTime + "</b>",
-                        "<b>" + subTrip.origin.name + "</b>",
-                        "<b>" + subTrip.destination.name + "</b>");
+                        "<b>" + getLocationName(subTrip.origin) + "</b>",
+                        "<b>" + getLocationName(subTrip.destination) + "</b>");
             } else {
                 description = getString(R.string.trip_description_normal,
                         subTrip.departureTime, subTrip.arrivalTime,
                         "<b>" + subTrip.transport.name + "</b>",
-                        "<b>" + subTrip.origin.name + "</b>",
+                        "<b>" + getLocationName(subTrip.origin) + "</b>",
                         "<b>" + subTrip.transport.towards + "</b>",
-                        "<b>" + subTrip.destination.name + "</b>");
+                        "<b>" + getLocationName(subTrip.destination) + "</b>");
             }
 
             descriptionView.setText(android.text.Html.fromHtml(description.toString()));

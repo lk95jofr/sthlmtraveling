@@ -5,8 +5,6 @@ import static com.markupartist.sthlmtraveling.provider.ApiConf.apiEndpoint;
 import static com.markupartist.sthlmtraveling.provider.ApiConf.get;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
@@ -14,11 +12,14 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.location.Location;
 
 import com.markupartist.sthlmtraveling.utils.HttpManager;
+import com.markupartist.sthlmtraveling.utils.StreamUtils;
 
 public class SitesStore {
     private static SitesStore sInstance;
@@ -34,6 +35,7 @@ public class SitesStore {
     }
 
     public ArrayList<Site> getSite(String name) throws IOException {
+        /*
         ArrayList<Site> sites = new ArrayList<Site>();
 
         final HttpGet get = new HttpGet(apiEndpoint() + "/sites/"
@@ -49,10 +51,91 @@ public class SitesStore {
 
         entity = response.getEntity();
         SiteParser.parseResponse(entity.getContent(), sites);
+        */
+
+        ArrayList<Site> sites = getSiteV2(name);
 
         return sites;
     }
 
+    public ArrayList<Site> getSiteV2(String name) throws IOException {
+        final HttpGet get = new HttpGet(apiEndpoint() + "/site/"
+                + "?q=" + URLEncoder.encode(name)
+                + "&key=" + get(KEY));
+
+        HttpEntity entity = null;
+        final HttpResponse response = HttpManager.execute(get);
+
+        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            throw new IOException("A remote server error occurred when getting sites.");
+        }
+
+        entity = response.getEntity();
+        String rawContent = StreamUtils.toString(entity.getContent());
+        ArrayList<Site> sites = new ArrayList<Site>();
+        try {
+            JSONArray jsonSites = new JSONArray(rawContent);
+            for (int i = 0; i < jsonSites.length(); i++) {
+                try {
+                    sites.add(Site.fromJson(jsonSites.getJSONObject(i)));
+                } catch (JSONException e) {
+                    // Ignore errors here.
+                }
+            }
+        } catch (JSONException e) {
+            throw new IOException("Invalid input.");
+        }
+
+        return sites;
+    }
+
+    public ArrayList<StopPoint> nearby(Location location) throws IOException {
+        final HttpGet get = new HttpGet(apiEndpoint() + "/stoppoint/"
+                + "?lat=" + location.getLatitude()
+                + "&lon=" + location.getLongitude()
+                + "&maxDistance=1000"
+                + "&maxResults=20"
+                + "&key=" + get(KEY));
+
+        HttpEntity entity = null;
+        HttpResponse response;
+        try {
+            response = HttpManager.execute(get);
+        } catch (Exception e) {
+            response = HttpManager.execute(get);
+        }
+         
+
+        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            throw new IOException("A remote server error occurred when getting sites.");
+        }
+
+        entity = response.getEntity();
+        String rawContent = StreamUtils.toString(entity.getContent());
+        ArrayList<StopPoint> stopPoints = new ArrayList<StopPoint>();
+        try {
+            JSONArray jsonStops = new JSONArray(rawContent);
+            for (int i = 0; i < jsonStops.length(); i++) {
+                try {
+                    JSONObject jsonStop = jsonStops.getJSONObject(i);
+                    StopPoint stopPoint = new StopPoint();
+                    stopPoint.site = Site.fromJson(jsonStop.getJSONObject("site"));
+                    stopPoint.name = jsonStop.getString("name");
+                    stopPoint.distance = jsonStop.getInt("distance");
+
+                    stopPoints.add(stopPoint);
+                } catch (JSONException e) {
+                    // Ignore errors here.
+                }
+            }
+        } catch (JSONException e) {
+            throw new IOException("Invalid input.");
+        }
+
+        return stopPoints;
+    }
+    
+    /*
     private static class SiteParser {
         public static void parseResponse(InputStream in, ArrayList<Site> sites) throws IOException {
             try {
@@ -97,6 +180,6 @@ public class SitesStore {
                 e.printStackTrace();
             }
         }
-
     }
+    */
 }
