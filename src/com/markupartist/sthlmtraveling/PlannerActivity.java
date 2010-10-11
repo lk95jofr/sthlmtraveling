@@ -19,7 +19,6 @@ package com.markupartist.sthlmtraveling;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
@@ -76,7 +75,7 @@ import com.markupartist.sthlmtraveling.provider.planner.Planner;
 import com.markupartist.sthlmtraveling.provider.planner.Stop;
 import com.markupartist.sthlmtraveling.utils.LocationUtils;
 
-public class PlannerActivity extends Activity implements OnCheckedChangeListener {
+public class PlannerActivity extends BaseActivity implements OnCheckedChangeListener {
     private static final String TAG = "PlannerActivity";
     private static final int DIALOG_START_POINT = 0;
     private static final int DIALOG_END_POINT = 1;
@@ -187,10 +186,13 @@ public class PlannerActivity extends Activity implements OnCheckedChangeListener
 
         // Handle create shortcut.
         if (mCreateShortcut) {
+            registerEvent("Planner create shortcut");
             setTitle(R.string.create_shortcut_label);
             search.setText(getText(R.string.create_shortcut_label));
             RadioGroup chooseTimeGroup = (RadioGroup) findViewById(R.id.planner_choose_time_group);
             chooseTimeGroup.setVisibility(View.GONE);
+        } else {
+            registerEvent("Planner");
         }
     }
 

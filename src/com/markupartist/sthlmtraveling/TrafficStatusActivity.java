@@ -17,21 +17,10 @@
 package com.markupartist.sthlmtraveling;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
-import com.markupartist.sthlmtraveling.provider.departure.Departure;
-import com.markupartist.sthlmtraveling.provider.deviation.Deviation;
-import com.markupartist.sthlmtraveling.provider.deviation.DeviationStore;
-import com.markupartist.sthlmtraveling.provider.deviation.DeviationStore.TrafficEvent;
-import com.markupartist.sthlmtraveling.provider.deviation.DeviationStore.TrafficStatus;
-import com.markupartist.sthlmtraveling.provider.deviation.DeviationStore.TrafficType;
-
-import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
@@ -41,7 +30,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class TrafficStatusActivity extends Activity {
+import com.markupartist.sthlmtraveling.provider.departure.Departure;
+import com.markupartist.sthlmtraveling.provider.deviation.DeviationStore;
+import com.markupartist.sthlmtraveling.provider.deviation.DeviationStore.TrafficEvent;
+import com.markupartist.sthlmtraveling.provider.deviation.DeviationStore.TrafficStatus;
+import com.markupartist.sthlmtraveling.provider.deviation.DeviationStore.TrafficType;
+
+public class TrafficStatusActivity extends BaseActivity {
 
     private static final String TAG = "TrafficStatusActivity";
     private LinearLayout mProgress;
@@ -51,6 +46,8 @@ public class TrafficStatusActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.traffic_status);
+
+        registerEvent("Traffic status");
 
         Button allDeviations = (Button) findViewById(R.id.traffic_status_btn_all_deviations);
         allDeviations.setOnClickListener(new OnClickListener() {

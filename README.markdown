@@ -72,6 +72,10 @@ STHLM Traveling is open source and licensed under
 Changelog
 ---------
 * 2.1.0
+    * Changed to use json instead of xml for getting site data from the backend.
+    * Mapped the bus icon for närtrafiken.  
+    * Added Flurry Analytics v1.24. We need analytics to be able to improve
+      the application and know how users use it.
     * Using default Theme in preferences because [issue](http://twitter.com/johanni/status/26117527135) with Sony Ericsson devices.
     * Date of Trip added to the detailed view.
     * New arrows and clock icons in the journey planner by [Sara Smedman](http://joforik.net/).
@@ -82,6 +86,7 @@ Changelog
       result, closes [#25](http://github.com/johannilsson/sthlmtraveling/issues#issue/25).
     * Replaced the token MY_LOCATION with a localized string in the detailed
       result, closes [#35](http://github.com/johannilsson/sthlmtraveling/issues#issue/35). 
+    * Target sdk version is now 8 (2.2) min sdk version is still 3 (1.5).
     * Possibility to change install location (Install on SD card), closes [#34](http://github.com/johannilsson/sthlmtraveling/issues#issue/34).
     * Make sure tasks are canceled when user leaves the RoutesActivity, closes [#27](http://github.com/johannilsson/sthlmtraveling/issues#issue/27).
     * Fixed bug when restoring GetEarlierRoutesTask, closes [#17](http://github.com/johannilsson/sthlmtraveling/issues#issue/17).
