@@ -53,7 +53,8 @@ public class DeparturesStore {
         HttpEntity entity = response.getEntity();
     	if (entity == null) {
             Log.w(TAG, "HttpEntity is null");
-    		throw new IllegalArgumentException(TAG + ", HttpEntity is null"); // TODO IllegalArgumentException???
+            // TODO IllegalArgumentException??? Maybe return empty HashMap instead?
+    		throw new IllegalArgumentException(TAG + ", HttpEntity is null");
     	}
 
         HashMap<String, DepartureList> departures =
