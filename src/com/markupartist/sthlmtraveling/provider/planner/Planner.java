@@ -17,7 +17,7 @@
 package com.markupartist.sthlmtraveling.provider.planner;
 
 import static com.markupartist.sthlmtraveling.provider.ApiConf.KEY;
-import static com.markupartist.sthlmtraveling.provider.ApiConf.apiEndpoint;
+import static com.markupartist.sthlmtraveling.provider.ApiConf.apiEndpoint2;
 import static com.markupartist.sthlmtraveling.provider.ApiConf.get;
 
 import java.io.IOException;
@@ -30,14 +30,15 @@ import java.util.Date;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.markupartist.sthlmtraveling.R;
@@ -59,6 +60,51 @@ public class Planner {
     private Planner() {
     }
 
+    public static int plannerErrorCodeToStringRes(String errorCode) {
+        // Make sure to have the common error codes as high as possible.
+        if ("H9220".equals(errorCode)) {
+            return R.string.planner_error_H9220;
+        } else if ("H895".equals(errorCode)) {
+            return R.string.planner_error_H895;
+        } else if ("H9300".equals(errorCode)) {
+            return R.string.planner_error_H9300;
+        } else if ("H9360".equals(errorCode)) {
+            return R.string.planner_error_H9360;
+        } else if ("H9380".equals(errorCode)) {
+            return R.string.planner_error_H9380;
+        } else if ("H9320".equals(errorCode)) {
+            return R.string.planner_error_H9320;
+        } else if ("H9280".equals(errorCode)) {
+            return R.string.planner_error_H9280;
+        } else if ("H9260".equals(errorCode)) {
+            return R.string.planner_error_H9260;
+        } else if ("H9250".equals(errorCode)) {
+            return R.string.planner_error_H9250;
+        } else if ("H9240".equals(errorCode)) {
+            return R.string.planner_error_H9240;
+        } else if ("H9230".equals(errorCode)) {
+            return R.string.planner_error_H9230;
+        } else if ("H900".equals(errorCode)) {
+            return R.string.planner_error_H900;
+        } else if ("H892".equals(errorCode)) {
+            return R.string.planner_error_H892;
+        } else if ("H891".equals(errorCode)) {
+            return R.string.planner_error_H891;
+        } else if ("H890".equals(errorCode)) {
+            return R.string.planner_error_H890;
+        } else if ("H500".equals(errorCode)) {
+            return R.string.planner_error_H500;
+        } else if ("H455".equals(errorCode)) {
+            return R.string.planner_error_H455;
+        } else if ("H410".equals(errorCode)) {
+            return R.string.planner_error_H410;
+        } else if ("H390".equals(errorCode)) {
+            return R.string.planner_error_H390;
+        }
+
+        return R.string.planner_error_unknown;
+    }
+
     /**
      * Find stops that matches the provided name
      * @param name the name
@@ -75,65 +121,64 @@ public class Planner {
         return stops;
     }
 
-    private JSONObject createQuery(JourneyQuery query) throws JSONException {
-        JSONObject jsonQuery = new JSONObject();
-        JSONObject origin = new JSONObject();
-        origin.put("id", query.origin.id);
-        origin.put("name", query.origin.name);
-        origin.put("latitude", query.origin.latitude);
-        origin.put("longitude", query.origin.longitude);
-
-        JSONObject destination = new JSONObject();
-        destination.put("id", query.destination.id);
-        destination.put("name", query.destination.name);
-        destination.put("latitude", query.destination.latitude);
-        destination.put("longitude", query.destination.longitude);
-
-        jsonQuery.put("origin", origin);
-        jsonQuery.put("destination", destination);
-        jsonQuery.put("ident", query.ident);
-        jsonQuery.put("seqnr", query.seqnr);
-        jsonQuery.put("time", query.time.format("%F %R"));
-        jsonQuery.put("isTimeDeparture", query.isTimeDeparture);
-
-        return jsonQuery;
-    }
-
     public Response findPreviousJourney(JourneyQuery query) throws IOException, BadResponse {
-        try {
-            JSONObject json = createQuery(query);
-            json.put("isPreviousQuery", true);
-            return doQuery(json);
-        } catch (JSONException e) {
-            throw new IOException(e.getMessage());
-        }
+        return doJourneyQuery(query, 2);
     }
 
     public Response findNextJourney(JourneyQuery query) throws IOException, BadResponse {
-        try {
-            JSONObject json = createQuery(query);
-            json.put("isNextQuery", true);
-            return doQuery(json);
-        } catch (JSONException e) {
-            throw new IOException(e.getMessage());
-        }
+        return doJourneyQuery(query, 1);
     }
 
     public Response findJourney(JourneyQuery query) throws IOException, BadResponse {
-        try {
-            return doQuery(createQuery(query));
-        } catch (JSONException e) {
-            throw new IOException(e.getMessage());
-        }
+        return doJourneyQuery(query, -1);
     }
 
-    private Response doQuery(JSONObject jsonQuery) throws IOException, BadResponse {
-        final HttpPost post = new HttpPost(apiEndpoint()
-                + "/journeyplanner/?key=" + get(KEY));
+    private Response doJourneyQuery(JourneyQuery query, int scrollDirection) throws IOException, BadResponse {
 
-        post.setEntity(new StringEntity(jsonQuery.toString()));
+        Uri u = Uri.parse(apiEndpoint2());
+        Uri.Builder b = u.buildUpon();
+        b.appendEncodedPath("v1/journey/");
+        if (scrollDirection > -1) {
+            b.appendQueryParameter("dir", String.valueOf(scrollDirection));
+            b.appendQueryParameter("ident", query.ident);
+            b.appendQueryParameter("seq", query.seqnr);
+        } else {
+            b.appendQueryParameter("origin", query.origin.name);
+            if (query.origin.hasLocation()) {
+                b.appendQueryParameter("origin_latitude", String.valueOf(query.origin.latitude / 1E6));
+                b.appendQueryParameter("origin_longitude", String.valueOf(query.origin.longitude / 1E6));
+            }
+            b.appendQueryParameter("destination", query.destination.name);
+            if (query.destination.hasLocation()) {
+                b.appendQueryParameter("destination_latitude", String.valueOf(query.destination.latitude / 1E6));
+                b.appendQueryParameter("destination_longitude", String.valueOf(query.destination.longitude / 1E6));
+            }
+            for (String transportMode : query.transportModes) {
+                b.appendQueryParameter("transport", transportMode);
+            }
+            if (query.time != null) {
+                b.appendQueryParameter("date", query.time.format("%d.%m.%Y"));
+                b.appendQueryParameter("time", query.time.format("%H:%M"));
+            }
+            if (!query.isTimeDeparture) {
+                b.appendQueryParameter("arrival", "1");
+            }
+            if (query.hasVia()) {
+                b.appendQueryParameter("via", query.via.name);
+            }
+            if (query.alternativeStops) {
+                b.appendQueryParameter("alternative", "1");
+            }
+        }
 
-        final HttpResponse response = HttpManager.execute(post);
+        // Include intermediate stops.
+        //b.appendQueryParameter("intermediate_stops", "1");
+
+        u = b.build();
+
+        final HttpGet get = new HttpGet(u.toString());
+        get.addHeader("X-STHLMTraveling-API-Key", get(KEY));
+        final HttpResponse response = HttpManager.execute(get);
 
         HttpEntity entity;
         Response r = null;
@@ -144,7 +189,13 @@ public class Planner {
             entity = response.getEntity();
             rawContent = StreamUtils.toString(entity.getContent());
             try {
-                r = Response.fromJson(new JSONObject(rawContent));
+                JSONObject baseResponse = new JSONObject(rawContent);
+                if (baseResponse.has("journey")) {
+                    r = Response.fromJson(baseResponse.getJSONObject("journey"));
+                } else {
+                    Log.w(TAG, "Invalid response");
+                    // TODO: Parse errors.
+                }
             } catch (JSONException e) {
                 Log.d(TAG, "Could not parse the reponse...");
                 throw new IOException("Could not parse the response.");
@@ -185,8 +236,8 @@ public class Planner {
 
         public static BadResponse fromJson(JSONObject json) throws JSONException {
             BadResponse br = new BadResponse();
-            if (json.has("errorCode")) {
-                br.errorCode = json.getString("errorCode");
+            if (json.has("code")) {
+                br.errorCode = json.getString("code");
             } else {
                 br.errorCode = "-1";
             }
@@ -198,7 +249,7 @@ public class Planner {
             return br;
         }
     }
-
+    
     public static class Response implements Parcelable {
         // TODO: Parse out the ident.
         public String ident;
@@ -313,9 +364,12 @@ public class Planner {
          * @return returns true if this trip can be purchased with SMS.
          */
         public boolean canBuySmsTicket() {
-            return "2".equals(tariffRemark) ||
-                   "3".equals(tariffRemark) ||
-                   "4".equals(tariffRemark);
+            if (TextUtils.isEmpty(tariffRemark)) {
+                return false;
+            }
+            return tariffRemark.startsWith("2") ||
+                tariffRemark.startsWith("3") ||
+                tariffRemark.startsWith("4");
         }
 
         @Override
@@ -346,9 +400,9 @@ public class Planner {
             //parseLocation(json.getJSONObject("origin"));
 
             Trip2 trip = new Trip2();
-            trip.departureDate = json.getString("departureDate");
+            trip.departureDate = json.getString("departure_date");
 
-            JSONArray jsonSubTrips = json.getJSONArray("subTrips");
+            JSONArray jsonSubTrips = json.getJSONArray("sub_trips");
             for (int i = 0; i < jsonSubTrips.length(); i++) {
                 try {
                     trip.subTrips.add(SubTrip.fromJson(jsonSubTrips.getJSONObject(i)));
@@ -358,24 +412,24 @@ public class Planner {
                 }
             }
 
-            trip.arrivalDate = json.getString("arrivalDate");
-            trip.arrivalTime = json.getString("arrivalTime");
+            trip.arrivalDate = json.getString("arrival_date");
+            trip.arrivalTime = json.getString("arrival_time");
             trip.changes = json.getInt("changes");
             trip.co2 = json.getString("co2");
-            trip.departureDate = json.getString("departureDate");
-            trip.departureTime = json.getString("departureTime");
+            trip.departureDate = json.getString("departure_date");
+            trip.departureTime = json.getString("departure_time");
             trip.destination = Location.fromJson(json.getJSONObject("destination"));
             trip.duration = json.getString("duration");
-            trip.mt6MessageExist = json.getBoolean("mt6MessageExist");
+            trip.mt6MessageExist = json.getBoolean("mt6_messages_exist");
             trip.origin = Location.fromJson(json.getJSONObject("origin"));
-            if (json.has("tariffZones")) {
-                trip.tariffZones = json.getString("tariffZones");
+            if (json.has("tariff_zones")) {
+                trip.tariffZones = json.getString("tariff_zones");
             }
-            if (json.has("tariffRemark")) {
-                trip.tariffRemark = json.getString("tariffRemark");
+            if (json.has("tariff_remark")) {
+                trip.tariffRemark = json.getString("tariff_remark");
             }
-            trip.remarksMessageExist = json.getBoolean("remarksMessageExist");
-            trip.rtuMessageExist = json.getBoolean("rtuMessageExist");
+            trip.remarksMessageExist = json.getBoolean("remark_messages_exist");
+            trip.rtuMessageExist = json.getBoolean("rtu_messages_exist");
 
             return trip;
         }
@@ -457,6 +511,63 @@ public class Planner {
         };
     }
 
+    /**
+     * Representation of a intermediate stop.
+     */
+    public static class IntermediateStop implements Parcelable {
+
+        public String arrivalDate;
+        public String arrivalTime;
+        public Location location;
+
+        public IntermediateStop(Parcel parcel) {
+            arrivalDate = parcel.readString();
+            arrivalTime = parcel.readString();
+            location = parcel.readParcelable(Location.class.getClassLoader());
+        }
+
+        public IntermediateStop() {
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(arrivalDate);
+            dest.writeString(arrivalTime);
+            dest.writeParcelable(location, 0);
+        }
+
+        public static IntermediateStop fromJson(JSONObject json)
+                throws JSONException {
+            IntermediateStop is = new IntermediateStop();
+            is.arrivalDate = json.getString("arrival_date");
+            is.arrivalTime = json.getString("arrival_time");
+            is.location = Location.fromJson(json.getJSONObject("location"));
+            return is;
+        }
+
+        @Override
+        public String toString() {
+            return "IntermediateStop [arrivalDate=" + arrivalDate
+                    + ", arrivalTime=" + arrivalTime + ", location=" + location
+                    + "]";
+        }
+
+        public static final Creator<IntermediateStop> CREATOR = new Creator<IntermediateStop>() {
+            public IntermediateStop createFromParcel(Parcel parcel) {
+                return new IntermediateStop(parcel);
+            }
+
+            public IntermediateStop[] newArray(int size) {
+                return new IntermediateStop[size];
+            }
+        };
+    }
+
     public static class SubTrip implements Parcelable {
         public Location origin;
         public Location destination;
@@ -468,6 +579,9 @@ public class Planner {
         public ArrayList<String> remarks = new ArrayList<String>();
         public ArrayList<String> rtuMessages = new ArrayList<String>();
         public ArrayList<String> mt6Messages = new ArrayList<String>();
+        public String reference;
+        public ArrayList<IntermediateStop> intermediateStop =
+            new ArrayList<IntermediateStop>();
 
         public SubTrip() {}
 
@@ -485,11 +599,13 @@ public class Planner {
             parcel.readStringList(rtuMessages);
             mt6Messages = new ArrayList<String>();
             parcel.readStringList(mt6Messages);
+            reference = parcel.readString();
+            intermediateStop = new ArrayList<IntermediateStop>();
+            parcel.readList(intermediateStop, Location.class.getClassLoader());
         }
 
         @Override
         public int describeContents() {
-            // TODO Auto-generated method stub
             return 0;
         }
 
@@ -505,6 +621,8 @@ public class Planner {
             dest.writeStringList(remarks);
             dest.writeStringList(rtuMessages);
             dest.writeStringList(mt6Messages);
+            dest.writeString(reference);
+            dest.writeList(intermediateStop);
         }
 
         public static SubTrip fromJson(JSONObject json) throws JSONException {
@@ -512,20 +630,28 @@ public class Planner {
 
             st.origin = Location.fromJson(json.getJSONObject("origin"));
             st.destination = Location.fromJson(json.getJSONObject("destination"));
-            st.departureDate = json.getString("departureDate");
-            st.departureTime = json.getString("departureTime");
-            st.arrivalDate = json.getString("arrivalDate");
-            st.arrivalTime = json.getString("arrivalTime");
+            st.departureDate = json.getString("departure_date");
+            st.departureTime = json.getString("departure_time");
+            st.arrivalDate = json.getString("arrival_date");
+            st.arrivalTime = json.getString("arrival_time");
             st.transport = TransportType.fromJson(json.getJSONObject("transport"));
 
-            if (json.has("remarks")) {
-                fromJsonArray(json.getJSONArray("remarks"), st.remarks);
+            if (json.has("remark_messages")) {
+                fromJsonArray(json.getJSONArray("remark_messages"), st.remarks);
             }
-            if (json.has("rtuMessages")) {
-                fromJsonArray(json.getJSONArray("rtuMessages"), st.rtuMessages);
+            if (json.has("rtu_messages")) {
+                fromJsonArray(json.getJSONArray("rtu_messages"), st.rtuMessages);
             }
-            if (json.has("mt6Messages")) {
-                fromJsonArray(json.getJSONArray("mt6Messages"), st.mt6Messages);
+            if (json.has("mt6_messages")) {
+                fromJsonArray(json.getJSONArray("mt6_messages"), st.mt6Messages);
+            }
+            st.reference = json.getString("reference");
+            if (json.has("intermediate_stops") && !json.isNull("intermediate_stops")) {
+                JSONArray intermediateStopJsonArray = json.getJSONArray("intermediate_stops");
+                for (int i = 0; i < intermediateStopJsonArray.length(); i++) {
+                    st.intermediateStop.add(IntermediateStop.fromJson(
+                            intermediateStopJsonArray.getJSONObject(i)));
+                }
             }
 
             return st;
@@ -543,13 +669,12 @@ public class Planner {
             return "SubTrip [arrivalDate=" + arrivalDate + ", arrivalTime="
                     + arrivalTime + ", departureDate=" + departureDate
                     + ", departureTime=" + departureTime + ", destination="
-                    + destination + ", mt6Messages=" + mt6Messages
-                    + ", origin=" + origin + ", remarks=" + remarks
+                    + destination + ", intermediateStop=" + intermediateStop
+                    + ", mt6Messages=" + mt6Messages + ", origin=" + origin
+                    + ", reference=" + reference + ", remarks=" + remarks
                     + ", rtuMessages=" + rtuMessages + ", transport="
                     + transport + "]";
         }
-
-
 
         public static final Creator<SubTrip> CREATOR = new Creator<SubTrip>() {
             public SubTrip createFromParcel(Parcel parcel) {
@@ -596,10 +721,10 @@ public class Planner {
 
         public static Location fromJson(JSONObject json) throws JSONException {
             Location l = new Location();
-            l.id = json.getInt("id");
+            //l.id = json.getInt("id");
             l.name = json.getString("name");
-            l.longitude = json.getInt("longitude");
-            l.latitude = json.getInt("latitude");
+            l.longitude = (int) (json.getDouble("longitude") * 1E6);
+            l.latitude = (int) (json.getDouble("latitude") * 1E6);
             return l;
         }
 
@@ -636,6 +761,10 @@ public class Planner {
                 return new Location[size];
             }
         };
+
+        public boolean hasName() {
+            return !TextUtils.isEmpty(name);
+        }
     }
 
     public static class TransportType implements Parcelable {
@@ -677,8 +806,11 @@ public class Planner {
         }
 
         public int getImageResource() {
-            if ("BUS".equals(type) || "NAR".equals(type)) {
-                return R.drawable.transport_bus;
+            if ("BUS".equals(type)) {
+                if (name.contains("blå")) {
+                    return R.drawable.transport_bus_blue;
+                }
+                return R.drawable.transport_bus_red;
             } else if ("MET".equals(type)) {
                 if (name.contains("grön")) {
                     return R.drawable.transport_metro_green;
@@ -687,6 +819,8 @@ public class Planner {
                 } else if (name.contains("blå")) {
                     return R.drawable.transport_metro_blue;
                 }
+            } else if ("NAR".equals(type)) {
+                return R.drawable.transport_nar;
             } else if ("Walk".equals(type)) {
                 return R.drawable.transport_walk;
             } else if ("TRN".equals(type)) {
@@ -695,6 +829,8 @@ public class Planner {
                 return R.drawable.transport_lokalbana;
             } else if ("SHP".equals(type)) {
                 return R.drawable.transport_boat;
+            } else if ("FLY".equals(type)) {
+                return R.drawable.transport_fly;
             }
 
             Log.d(TAG, "Unknown transport type " + type);

@@ -21,15 +21,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONException;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.SQLException;
 import android.content.DialogInterface.OnClickListener;
-import android.database.SQLException;
+import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
@@ -40,13 +45,13 @@ import android.text.TextUtils;
 import android.text.format.Time;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager.BadTokenException;
 import android.widget.Adapter;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -55,9 +60,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.SimpleAdapter.ViewBinder;
 
+import com.google.ads.AdRequest;
+import com.google.ads.AdView;
+import com.markupartist.android.widget.ActionBar;
+import com.markupartist.android.widget.actionbar.R;
 import com.markupartist.sthlmtraveling.MyLocationManager.MyLocationFoundListener;
 import com.markupartist.sthlmtraveling.SectionedAdapter.Section;
-import com.markupartist.sthlmtraveling.provider.FavoritesDbAdapter;
+import com.markupartist.sthlmtraveling.provider.JourneysProvider.Journey.Journeys;
 import com.markupartist.sthlmtraveling.provider.deviation.DeviationStore;
 import com.markupartist.sthlmtraveling.provider.planner.JourneyQuery;
 import com.markupartist.sthlmtraveling.provider.planner.Planner;
@@ -69,6 +78,7 @@ import com.markupartist.sthlmtraveling.provider.planner.Planner.BadResponse;
 import com.markupartist.sthlmtraveling.provider.planner.Planner.Response;
 import com.markupartist.sthlmtraveling.provider.planner.Planner.SubTrip;
 import com.markupartist.sthlmtraveling.provider.planner.Planner.Trip2;
+import com.markupartist.sthlmtraveling.utils.AdRequestFactory;
 
 /**
  * Routes activity
@@ -84,11 +94,6 @@ import com.markupartist.sthlmtraveling.provider.planner.Planner.Trip2;
  */
 public class RoutesActivity extends BaseListActivity
         implements MyLocationFoundListener {
-    /**
-     * The Journey
-     */
-    static final String EXTRA_JOURNEY =
-        "sthlmtraveling.intent.action.JOURNEY";
 
     /**
      * The Journey
@@ -164,25 +169,27 @@ public class RoutesActivity extends BaseListActivity
     private MultipleListAdapter mMultipleListAdapter;
     private TextView mFromView;
     private TextView mToView;
+    private TextView mViaView;
     private ArrayList<HashMap<String, String>> mDateAdapterData;
-    //private Stop mStartPoint;
-    //private Stop mEndPoint;
-    //private Time mTime;
-    private FavoritesDbAdapter mFavoritesDbAdapter;
-    private FavoriteButtonHelper mFavoriteButtonHelper;
+
     private MyLocationManager mMyLocationManager;
     private SearchRoutesTask mSearchRoutesTask;
     private GetEarlierRoutesTask mGetEarlierRoutesTask;
     private GetLaterRoutesTask mGetLaterRoutesTask;
     private Toast mToast;
     private ProgressDialog mProgress;
-    //private boolean mIsTimeDeparture;
-    //private Trip mTrip;
+
     private Response mPlannerResponse;
     private JourneyQuery mJourneyQuery;
     private String mRouteErrorCode;
 
     private Bundle mSavedState;
+
+    private ImageButton mFavoriteButton;
+
+    private ActionBar mActionBar;
+
+    private AdView mAdView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,11 +201,9 @@ public class RoutesActivity extends BaseListActivity
         LocationManager locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
         mMyLocationManager = new MyLocationManager(locationManager);
 
-        // Parse data URI       
-        mJourneyQuery = createQuery(getIntent().getData());
+        // Get the journey query.
+        mJourneyQuery = getJourneyQueryFromIntent(getIntent());
 
-        Log.d(TAG, "dest: " + mJourneyQuery.destination.name);
-        
         if (mJourneyQuery.origin.name == null
                 || mJourneyQuery.destination.name == null) {
             showDialog(DIALOG_ILLEGAL_PARAMETERS);
@@ -206,14 +211,56 @@ public class RoutesActivity extends BaseListActivity
             return;
         }
 
-        mFromView = (TextView) findViewById(R.id.route_from);
-        mToView = (TextView) findViewById(R.id.route_to);
+        mActionBar = initActionBar(R.menu.actionbar_routes);
+        mAdView = (AdView) findViewById(R.id.ad_view);
+        if (AppConfig.ADS_ENABLED) { 
+            mAdView.loadAd(AdRequestFactory.createRequest());
+        }
+        
+
+        View headerView = getLayoutInflater().inflate(R.layout.route_header, null);
+        mFromView = (TextView) headerView.findViewById(R.id.route_from);
+        mToView = (TextView) headerView.findViewById(R.id.route_to);
+
+        if (mJourneyQuery.hasVia()) {
+            headerView.findViewById(R.id.via_row).setVisibility(View.VISIBLE);
+            mViaView = (TextView) headerView.findViewById(R.id.route_via);
+            mViaView.setText(mJourneyQuery.via.name);
+        }
+
+        getListView().addHeaderView(headerView, null, false);
+
         updateStartAndEndPointViews(mJourneyQuery.origin, mJourneyQuery.destination);
+
+        mFavoriteButton = (ImageButton) findViewById(R.id.route_favorite);
+        mFavoriteButton.setOnClickListener(new OnStarredJourneyButtonClickListener());
+
+        updateJourneyHistory();
 
         initRoutes(mJourneyQuery);
     }
 
-    private JourneyQuery createQuery(Uri uri) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.actionbar_item_reverse:
+            reverseJourneyQuery();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private JourneyQuery getJourneyQueryFromIntent(Intent intent) {
+        JourneyQuery journeyQuery;
+        if (intent.hasExtra(EXTRA_JOURNEY_QUERY)) {
+            journeyQuery = intent.getExtras().getParcelable(EXTRA_JOURNEY_QUERY);
+        } else {
+            journeyQuery = getJourneyQueryFromUri(intent.getData());
+        }
+        return journeyQuery;
+    }
+
+    private JourneyQuery getJourneyQueryFromUri(Uri uri) {
         JourneyQuery jq = new JourneyQuery();
 
         jq.origin = new Planner.Location();        
@@ -366,32 +413,28 @@ public class RoutesActivity extends BaseListActivity
     }
 
     @Override
-    protected void onStart() {
-    	super.onStart();
-    	
-        try {
-        	mFavoritesDbAdapter = new FavoritesDbAdapter(this).open();
-            mFavoriteButtonHelper = new FavoriteButtonHelper(this, mFavoritesDbAdapter, mJourneyQuery.origin, mJourneyQuery.destination);
-        } catch (SQLException e) {
-        	// TODO Initilize a new DB? Restart app? Send report?
-        }
-
-    }
-    
-    @Override
     protected void onResume() {
         super.onResume();
-        
-        // Could be null if bad parameters was passed to the search.
-        if (mFavoriteButtonHelper != null) {
-            mFavoriteButtonHelper.loadImage();
-        }
-        
-        if (mSavedState != null) {
-        	restoreLocalState(mSavedState);
-        }
+
+        if (mSavedState != null) restoreLocalState(mSavedState);
     }
-    
+
+    @Override
+    protected void onDestroy() {
+        if (mAdView != null) {
+            mAdView.destroy();
+        }
+
+        super.onDestroy();
+
+        onCancelSearchRoutesTask();
+        onCancelGetEarlierRoutesTask();
+        onCancelGetLaterRoutesTask();
+
+        mMyLocationManager.removeUpdates();
+        dismissProgress();
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -403,20 +446,6 @@ public class RoutesActivity extends BaseListActivity
         mMyLocationManager.removeUpdates();
 
         dismissProgress();
-    }
-
-    @Override
-    protected void onStop() {
-    	super.onStop();
-    	
-        if (mFavoritesDbAdapter != null) {
-            mFavoritesDbAdapter.close();
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     /**
@@ -644,6 +673,10 @@ public class RoutesActivity extends BaseListActivity
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
 
+        int headerViewsCount = getListView().getHeaderViewsCount();
+        // Compensate for the added header views. Is this how we do it?
+        position -= headerViewsCount;
+
         Section section = mSectionedAdapter.getSection(position);
         int sectionId = section.id;
         int innerPosition = mSectionedAdapter.getSectionIndex(position);
@@ -690,6 +723,12 @@ public class RoutesActivity extends BaseListActivity
         } else {
             mRouteAdapter.refill(response.trips);
             mSectionedAdapter.notifyDataSetChanged();
+        }
+
+        if (isStarredJourney(mJourneyQuery)) {
+            mFavoriteButton.setImageResource(android.R.drawable.star_big_on);
+        } else {
+            mFavoriteButton.setImageResource(android.R.drawable.star_big_off);
         }
     }
 
@@ -841,63 +880,23 @@ public class RoutesActivity extends BaseListActivity
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.options_menu_routes, menu);
-        return true;
-    }
+    protected void reverseJourneyQuery() {
+        Planner.Location tmpStartPoint = new Planner.Location(mJourneyQuery.destination);
+        Planner.Location tmpEndPoint = new Planner.Location(mJourneyQuery.origin);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.new_search :
-                Intent i = new Intent(this, StartActivity.class);
-                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(i);
-                return true;
-            case R.id.reverse_start_end :
-                Planner.Location tmpStartPoint = new Planner.Location(mJourneyQuery.destination);
-                Planner.Location tmpEndPoint = new Planner.Location(mJourneyQuery.origin);
+        mJourneyQuery.origin = tmpStartPoint;
+        mJourneyQuery.destination = tmpEndPoint;
 
-                mJourneyQuery.origin = tmpStartPoint;
-                mJourneyQuery.destination = tmpEndPoint;
+        /*
+         * Note: To launch a new intent won't work because sl.se would
+         * need to have a new ident generated to be able to search for
+         * route details in the next step.
+         */
+        mSearchRoutesTask = new SearchRoutesTask();
+        mSearchRoutesTask.execute(mJourneyQuery);
 
-                /*
-                 * Note: To launch a new intent won't work because sl.se would
-                 * need to have a new ident generated to be able to search for
-                 * route details in the next step.
-                 */
-                mSearchRoutesTask = new SearchRoutesTask();
-                mSearchRoutesTask.execute(mJourneyQuery);
-
-                updateStartAndEndPointViews(
-                        mJourneyQuery.origin, mJourneyQuery.destination);
-
-                // Update the favorite button
-                mFavoriteButtonHelper
-                        .setStartPoint(mJourneyQuery.origin)
-                        .setEndPoint(mJourneyQuery.destination)
-                        .loadImage();
-                return true;
-            case R.id.menu_share:
-                if (mRouteAdapter != null) {
-                    //share(mRouteAdapter.mTrips);
-                }
-                return true;
-            /*
-            case R.id.show_qr_code :
-                Uri routesUri = createRoutesUri(
-                        mTrip.getStartPoint(), mTrip.getEndPoint(), null, true);
-                BarcodeScannerIntegrator.shareText(this, routesUri.toString(),
-                        R.string.install_barcode_scanner_title,
-                        R.string.requires_barcode_scanner_message,
-                        R.string.yes, R.string.no);
-
-                return true;
-            */
-        }
-        return super.onOptionsItemSelected(item);
+        updateStartAndEndPointViews(
+                mJourneyQuery.origin, mJourneyQuery.destination);
     }
 
     @Override
@@ -955,9 +954,10 @@ public class RoutesActivity extends BaseListActivity
             .setNegativeButton(getText(R.string.cancel), null)
             .create();
         case DIALOG_SEARCH_ROUTES_ERROR:
+
             return new AlertDialog.Builder(this)
-            .setTitle(mRouteErrorCode)
-            .setMessage(mRouteErrorCode)
+            .setTitle(R.string.planner_error_title)
+            .setMessage(Planner.plannerErrorCodeToStringRes(mRouteErrorCode))
             .setPositiveButton(getText(R.string.back), new OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -1241,10 +1241,15 @@ public class RoutesActivity extends BaseListActivity
      * Show progress dialog.
      */
     private void showProgress() {
+        /*
         if (mProgress == null) {
             mProgress = new ProgressDialog(this);
             mProgress.setMessage(getText(R.string.loading));
             mProgress.show();   
+        }
+        */
+        if (mActionBar != null) {
+            mActionBar.setProgressBarVisibility(View.VISIBLE);
         }
     }
 
@@ -1252,9 +1257,14 @@ public class RoutesActivity extends BaseListActivity
      * Dismiss the progress dialog.
      */
     private void dismissProgress() {
+        /*
         if (mProgress != null) {
             mProgress.dismiss();
             mProgress = null;
+        }
+        */
+        if (mActionBar != null) {
+            mActionBar.setProgressBarVisibility(View.GONE);
         }
     }
 
@@ -1286,6 +1296,25 @@ public class RoutesActivity extends BaseListActivity
         startActivity(Intent.createChooser(intent, getText(R.string.share_label)));
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        onRotationChange(newConfig);
+
+        super.onConfigurationChanged(newConfig);
+    }
+
+    private void onRotationChange(Configuration newConfig) {
+        if (newConfig.orientation == newConfig.ORIENTATION_LANDSCAPE) {
+            if (mAdView != null) {
+                mAdView.setVisibility(View.GONE);
+            }
+        } else {
+            if (mAdView != null) {
+                mAdView.setVisibility(View.VISIBLE);
+            }
+        }        
+    }
+    
     /**
      * Background task for searching for routes.
      */
@@ -1321,15 +1350,30 @@ public class RoutesActivity extends BaseListActivity
                 onSearchRoutesResult(result);
             } else if (!mWasSuccess) {
                 if (TextUtils.isEmpty(mErrorCode)) {
-                    showDialog(DIALOG_SEARCH_ROUTES_NETWORK_PROBLEM);
+                    getListView().getEmptyView().setVisibility(View.GONE);
+                    try {
+                        showDialog(DIALOG_SEARCH_ROUTES_NETWORK_PROBLEM);
+                    } catch (BadTokenException e) {
+                        Log.w(TAG, "Caught BadTokenException when trying to show network error dialog.");
+                    }
                 } else {
+                    getListView().getEmptyView().setVisibility(View.GONE);
                     mRouteErrorCode = mErrorCode;
-                    showDialog(DIALOG_SEARCH_ROUTES_ERROR);
+                    try {
+                        showDialog(DIALOG_SEARCH_ROUTES_ERROR);
+                    } catch (BadTokenException e) {
+                        Log.w(TAG, "Caught BadTokenException when trying to show routes error dialog.");
+                    }
                 }
             }/* else if (result.hasAlternatives()) {
                 onSiteAlternatives(result);
             }*/ else {
-                showDialog(DIALOG_SEARCH_ROUTES_NO_RESULT);
+                getListView().getEmptyView().setVisibility(View.GONE);
+                try {
+                    showDialog(DIALOG_SEARCH_ROUTES_NO_RESULT);
+                } catch (BadTokenException e) {
+                    Log.w(TAG, "Caught BadTokenException when trying to no results dialog.");
+                }
             }
         }
     }
@@ -1367,13 +1411,25 @@ public class RoutesActivity extends BaseListActivity
                 onSearchRoutesResult(result);
             } else if (!mWasSuccess) {
                 if (TextUtils.isEmpty(mErrorCode)) {
-                    showDialog(DIALOG_GET_EARLIER_ROUTES_NETWORK_PROBLEM);
+                    try {
+                        showDialog(DIALOG_GET_EARLIER_ROUTES_NETWORK_PROBLEM);
+                    } catch (BadTokenException e) {
+                        Log.w(TAG, "Caught BadTokenException when trying to show network error dialog.");
+                    }
                 } else {
                     mRouteErrorCode = mErrorCode;
-                    showDialog(DIALOG_SEARCH_ROUTES_ERROR);
+                    try {
+                        showDialog(DIALOG_SEARCH_ROUTES_ERROR);
+                    } catch (BadTokenException e) {
+                        Log.w(TAG, "Caught BadTokenException when trying to show routes error dialog.");
+                    }
                 }
             } else {
-                showDialog(DIALOG_GET_ROUTES_SESSION_TIMEOUT);
+                try {
+                    showDialog(DIALOG_GET_ROUTES_SESSION_TIMEOUT);
+                } catch (BadTokenException e) {
+                    Log.w(TAG, "Caught BadTokenException when trying to show session timeout dialog.");
+                }
             }
         }
     }
@@ -1411,13 +1467,143 @@ public class RoutesActivity extends BaseListActivity
                 onSearchRoutesResult(result);
             } else if (!mWasSuccess) {
                 if (TextUtils.isEmpty(mErrorCode)) {
-                    showDialog(DIALOG_GET_EARLIER_ROUTES_NETWORK_PROBLEM);                    
+                    try {
+                        showDialog(DIALOG_GET_EARLIER_ROUTES_NETWORK_PROBLEM);
+                    } catch (BadTokenException e) {
+                        Log.w(TAG, "Caught BadTokenException when trying to show network error dialog.");
+                    }
                 } else {
                     mRouteErrorCode = mErrorCode;
-                    showDialog(DIALOG_SEARCH_ROUTES_ERROR);
+                    try {
+                        showDialog(DIALOG_SEARCH_ROUTES_ERROR);
+                    } catch (BadTokenException e) {
+                        Log.w(TAG, "Caught BadTokenException when trying to show routes error dialog.");
+                    }
                 }
             } else {
-                showDialog(DIALOG_GET_ROUTES_SESSION_TIMEOUT);
+                try {
+                    showDialog(DIALOG_GET_ROUTES_SESSION_TIMEOUT);
+                } catch (BadTokenException e) {
+                    Log.w(TAG, "Caught BadTokenException when trying to show session timeout dialog.");
+                }
+            }
+        }
+    }
+
+    private boolean isStarredJourney(JourneyQuery journeyQuery) {
+        String json;
+        try {
+            json = mJourneyQuery.toJson(false).toString();
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to convert journey to a json document.");
+            return false;
+        }
+
+        String[] projection = new String[] { Journeys.JOURNEY_DATA, };
+        Uri uri = Journeys.CONTENT_URI;
+        String selection = Journeys.STARRED + " = ? AND " + Journeys.JOURNEY_DATA + " = ?";
+        String[] selectionArgs = new String[] { "1", json };
+        Cursor cursor = managedQuery(uri, projection, selection, selectionArgs, null);
+        startManagingCursor(cursor);
+
+        boolean isStarred = cursor.getCount() > 0;
+
+        stopManagingCursor(cursor);
+
+        return isStarred;
+    }
+
+    /**
+     * Updates the journey history.
+     */
+    private void updateJourneyHistory() {
+        // TODO: Move to async task.
+        String json;
+        try {
+            json = mJourneyQuery.toJson(false).toString();
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to convert journey to a json document.");
+            return;
+        }
+        String[] projection = new String[] {
+                Journeys._ID,           // 0
+                Journeys.JOURNEY_DATA,  // 1
+                Journeys.STARRED,       // 2
+            };
+        String selection = Journeys.JOURNEY_DATA + " = ?";
+
+        Cursor cursor = managedQuery(Journeys.CONTENT_URI, projection,
+                selection, new String[] { json }, null);
+        startManagingCursor(cursor);
+
+        ContentValues values = new ContentValues();
+        Uri journeyUri;
+        if (cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            journeyUri = ContentUris.withAppendedId(Journeys.CONTENT_URI,
+                    cursor.getInt(0));
+            getContentResolver().update(
+                    journeyUri, values, null, null);
+        } else {
+            // Not sure if this is the best way to do it, but the lack limit and
+            // offset in on a content provider leaves us to fetch all and iterate.
+            values.put(Journeys.JOURNEY_DATA, json);
+            journeyUri = getContentResolver().insert(
+                    Journeys.CONTENT_URI, values);
+            Cursor notStarredCursor = managedQuery(Journeys.CONTENT_URI,
+                    projection,
+                    Journeys.STARRED + " = ? OR " + Journeys.STARRED + " IS NULL",
+                    new String[] { "0" },
+                    Journeys.DEFAULT_SORT_ORDER);
+            startManagingCursor(notStarredCursor);
+            // +1 because the position is zero-based.
+            if (notStarredCursor.moveToPosition(Journeys.DEFAULT_HISTORY_SIZE + 1)) {
+                do {
+                    Uri deleteUri = ContentUris.withAppendedId(
+                            Journeys.CONTENT_URI, notStarredCursor.getInt(0));
+                    getContentResolver().delete(deleteUri, null, null);
+                } while (notStarredCursor.moveToNext());
+            }
+            stopManagingCursor(notStarredCursor);
+        }
+        stopManagingCursor(cursor);
+        // TODO: Store created id and work on that while toggling if starred or not.
+        
+    }
+
+    private class OnStarredJourneyButtonClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            String json;
+            try {
+                json = mJourneyQuery.toJson(false).toString();
+            } catch (JSONException e) {
+                Log.e(TAG, "Failed to convert journey to a json document.");
+                return;
+            }
+
+            ContentValues values = new ContentValues();
+            values.put(Journeys.JOURNEY_DATA, json);
+            Uri uri = Journeys.CONTENT_URI;
+            String where = Journeys.JOURNEY_DATA + "= ?";
+            String[] selectionArgs = new String[] { json };
+            // TODO: Replace button with a checkbox and check with that instead?
+            if (isStarredJourney(mJourneyQuery)) {
+                values.put(Journeys.STARRED, "0");
+                getContentResolver().update(
+                        uri, values, where, selectionArgs);
+                mFavoriteButton.setImageResource(
+                        android.R.drawable.star_big_off);
+            } else {
+                values.put(Journeys.STARRED, "1");
+                int affectedRows = getContentResolver().update(
+                        uri, values, where, selectionArgs);
+                if (affectedRows <= 0) {
+                    getContentResolver().insert(
+                            Journeys.CONTENT_URI, values);
+                }
+                mFavoriteButton.setImageResource(
+                        android.R.drawable.star_big_on);
             }
         }
     }

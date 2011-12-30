@@ -22,33 +22,46 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import org.json.JSONException;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.database.Cursor;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 
-import com.markupartist.sthlmtraveling.provider.FavoritesDbAdapter;
+import com.google.ads.AdView;
+import com.markupartist.android.widget.ActionBar;
+import com.markupartist.android.widget.actionbar.R;
+import com.markupartist.sthlmtraveling.provider.JourneysProvider.Journey.Journeys;
 import com.markupartist.sthlmtraveling.provider.planner.JourneyQuery;
 import com.markupartist.sthlmtraveling.provider.planner.Planner;
 import com.markupartist.sthlmtraveling.provider.planner.Route;
+import com.markupartist.sthlmtraveling.provider.planner.Planner.IntermediateStop;
 import com.markupartist.sthlmtraveling.provider.planner.Planner.SubTrip;
 import com.markupartist.sthlmtraveling.provider.planner.Planner.Trip2;
+import com.markupartist.sthlmtraveling.utils.AdRequestFactory;
 
 public class RouteDetailActivity extends BaseListActivity {
     public static final String TAG = "RouteDetailActivity";
@@ -61,10 +74,15 @@ public class RouteDetailActivity extends BaseListActivity {
 
     private static final int DIALOG_BUY_SMS_TICKET = 1;
 
-    private FavoritesDbAdapter mFavoritesDbAdapter;
     private Trip2 mTrip;
     private JourneyQuery mJourneyQuery;
     private SubTripAdapter mSubTripAdapter;
+
+    private ImageButton mFavoriteButton;
+
+    private ActionBar mActionBar;
+
+    private AdView mAdView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,15 +96,26 @@ public class RouteDetailActivity extends BaseListActivity {
         mTrip = extras.getParcelable(EXTRA_JOURNEY_TRIP);
         mJourneyQuery = extras.getParcelable(EXTRA_JOURNEY_QUERY);
 
-        mFavoritesDbAdapter = new FavoritesDbAdapter(this).open();
+        mActionBar = initActionBar(R.menu.actionbar_route_detail);
 
-        TextView startPointView = (TextView) findViewById(R.id.route_from);
-        startPointView.setText(mJourneyQuery.origin.name);
-        TextView endPointView = (TextView) findViewById(R.id.route_to);
-        endPointView.setText(mJourneyQuery.destination.name);
+        mAdView = (AdView) findViewById(R.id.ad_view);
+        if (AppConfig.ADS_ENABLED) {
+            mAdView.loadAd(AdRequestFactory.createRequest());
+        }
+
+        View headerView = getLayoutInflater().inflate(R.layout.route_header, null);
+        TextView startPointView = (TextView) headerView.findViewById(R.id.route_from);
+        TextView endPointView = (TextView) headerView.findViewById(R.id.route_to);
+        //getListView().addHeaderView(headerView, null, false);
 
         startPointView.setText(getLocationName(mJourneyQuery.origin));
         endPointView.setText(getLocationName(mJourneyQuery.destination));
+
+        if (mJourneyQuery.hasVia()) {
+            headerView.findViewById(R.id.via_row).setVisibility(View.VISIBLE);
+            TextView viaTextView = (TextView) headerView.findViewById(R.id.route_via);
+            viaTextView.setText(mJourneyQuery.via.name);
+        }
 
         String durationInMinutes = mTrip.duration;
         try {
@@ -102,6 +131,12 @@ public class RouteDetailActivity extends BaseListActivity {
         } catch (ParseException e) {
             Log.e(TAG, "Error parsing duration, " + e.getMessage());
         }
+
+        /*View headerDetailView = getLayoutInflater().inflate(
+                R.layout.route_header_details, null);*/
+
+        LinearLayout headerDetailView = (LinearLayout) headerView.findViewById(R.id.header_details);
+        headerDetailView.setVisibility(View.VISIBLE);
         
         StringBuilder timeBuilder = new StringBuilder();
         timeBuilder.append(mTrip.departureTime);
@@ -111,7 +146,8 @@ public class RouteDetailActivity extends BaseListActivity {
         timeBuilder.append(durationInMinutes);
         timeBuilder.append(")");
         
-        TextView timeView = (TextView) findViewById(R.id.route_date_time);
+        //TextView timeView = (TextView) findViewById(R.id.route_date_time);
+        TextView timeView = (TextView) headerView.findViewById(R.id.route_date_time);
         timeView.setText(timeBuilder.toString());
         
         // TODO: We should parse the date when getting the results and store a
@@ -124,25 +160,69 @@ public class RouteDetailActivity extends BaseListActivity {
             ;
         }
         SimpleDateFormat otherFormat = new SimpleDateFormat("yyyy-MM-dd");
-        TextView dateView = (TextView) findViewById(R.id.route_date_of_trip);
+        //TextView dateView = (TextView) findViewById(R.id.route_date_of_trip);
+        TextView dateView = (TextView) headerView.findViewById(R.id.route_date_of_trip);
         if (date != null) {
             dateView.setText(getString(R.string.date_of_trip, otherFormat.format(date)));
         } else {
             dateView.setVisibility(View.GONE);
         }
 
-        FavoriteButtonHelper favoriteButtonHelper = new FavoriteButtonHelper(
-                this, mFavoritesDbAdapter, mJourneyQuery.origin,
-                mJourneyQuery.destination);
-        favoriteButtonHelper.loadImage();
+        //getListView().addHeaderView(headerDetailView, null, false);
+        getListView().addHeaderView(headerView, null, false);
+
+        mFavoriteButton = (ImageButton) findViewById(R.id.route_favorite);
+        if (isStarredJourney(mJourneyQuery)) {
+            mFavoriteButton.setImageResource(android.R.drawable.star_big_on);
+        }
+        mFavoriteButton.setOnClickListener(new OnStarredJourneyButtonClickListener());
 
         //initRouteDetails(mRoute);
         onRouteDetailsResult(mTrip);
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        onRotationChange(newConfig);
+
+        super.onConfigurationChanged(newConfig);
+    }
+
+    private void onRotationChange(Configuration newConfig) {
+        if (newConfig.orientation == newConfig.ORIENTATION_LANDSCAPE) {
+            if (mAdView != null) {
+                mAdView.setVisibility(View.GONE);
+            }
+        } else {
+            if (mAdView != null) {
+                mAdView.setVisibility(View.VISIBLE);
+            }
+        }        
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.actionbar_item_time:
+            Intent departuresIntent = new Intent(this, DeparturesActivity.class);
+            departuresIntent.putExtra(DeparturesActivity.EXTRA_SITE_NAME,
+                    mTrip.origin.name);
+            startActivity(departuresIntent);
+            return true;
+        case R.id.actionbar_item_sms:
+            showDialog(DIALOG_BUY_SMS_TICKET);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
+
+        int headerViewsCount = getListView().getHeaderViewsCount();
+        // Compensate for the added header views. Is this how we do it?
+        position -= headerViewsCount;
 
         Planner.Location location;
         // Detects the footer view.
@@ -211,41 +291,11 @@ public class RouteDetailActivity extends BaseListActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.options_menu_route_details, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.new_search :
-                Intent i = new Intent(this, StartActivity.class);
-                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(i);
-                return true;
-            case R.id.menu_departures_for_start:
-                Intent departuresIntent = new Intent(this, DeparturesActivity.class);
-                departuresIntent.putExtra(DeparturesActivity.EXTRA_SITE_NAME,
-                        mTrip.origin.name);
-                startActivity(departuresIntent);
-                return true;
-            case R.id.menu_share:
-                share(mTrip);
-                return true;
-            case R.id.menu_sms_ticket:
-                showDialog(DIALOG_BUY_SMS_TICKET);
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     protected void onDestroy() {
+        if (mAdView != null) {
+            mAdView.destroy();
+        }
         super.onDestroy();
-
-        mFavoritesDbAdapter.close();
     }
 
     /**
@@ -270,27 +320,13 @@ public class RouteDetailActivity extends BaseListActivity {
         setListAdapter(mSubTripAdapter);
 
         if (trip.canBuySmsTicket()) {
-            TextView zoneView = (TextView) findViewById(R.id.route_zones);
-            zoneView.setText(trip.tariffZones);
-            zoneView.setVisibility(View.VISIBLE);
-            zoneView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showDialog(DIALOG_BUY_SMS_TICKET);
-                }
-            });
+            mActionBar.addAction(
+                mActionBar.newAction(R.id.actionbar_item_sms)
+                    .setIcon(R.drawable.ic_actionbar_sms)
+            );
         }
 
         mTrip = trip;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem buySmsTicketItem = menu.findItem(R.id.menu_sms_ticket);
-        if (mTrip.canBuySmsTicket()) {
-            buySmsTicketItem.setEnabled(true);
-        }
-        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -302,7 +338,8 @@ public class RouteDetailActivity extends BaseListActivity {
                     getText(R.string.sms_ticket_price_reduced) + " " + getReducedPrice()
                 };
             return new AlertDialog.Builder(this)
-                .setTitle(getText(R.string.sms_ticket_label))
+            .setTitle(String.format("%s (%s)",
+                    getText(R.string.sms_ticket_label), mTrip.tariffZones))
                 .setItems(smsOptions, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
                         switch(item) {
@@ -320,12 +357,12 @@ public class RouteDetailActivity extends BaseListActivity {
     }
 
     private CharSequence getFullPrice() {
-        final int[] PRICE = new int[] { 30, 45, 60 };
+        final int[] PRICE = new int[] { 36, 54, 72 };
         return PRICE[mTrip.tariffZones.length() - 1] + " kr";
     }
 
     private CharSequence getReducedPrice() {
-        final int[] PRICE = new int[] { 18, 27, 36 };
+        final int[] PRICE = new int[] { 20, 30, 40 };
         return PRICE[mTrip.tariffZones.length() - 1] + " kr";
     }
 
@@ -446,8 +483,43 @@ public class RouteDetailActivity extends BaseListActivity {
                                     messagesLayout, position));
                 }
             }
-            
+
+            final LinearLayout intermediateStopLayout =
+                (LinearLayout) convertView.findViewById(R.id.intermediate_stops);
+            ToggleButton showHideIntermediateStops =
+                (ToggleButton) convertView.findViewById(
+                        R.id.show_hide_intermediate_stops);
+            showHideIntermediateStops.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        intermediateStopLayout.setVisibility(View.VISIBLE);
+                    } else {
+                        intermediateStopLayout.setVisibility(View.GONE);
+                    }
+                }
+            });
+            if (!subTrip.intermediateStop.isEmpty()) {
+                showHideIntermediateStops.setVisibility(View.VISIBLE);
+                for (IntermediateStop is : subTrip.intermediateStop) {
+                    intermediateStopLayout.addView(
+                            inflateIntermediateStop(is, intermediateStopLayout));
+                }
+            } else {
+                showHideIntermediateStops.setVisibility(View.GONE);
+            }
+
             return convertView;
+        }
+
+        private View inflateIntermediateStop(IntermediateStop stop,
+                ViewGroup layout) {
+            View view = mInflater.inflate(R.layout.intermediate_stop, layout, false);
+            TextView descView =
+                (TextView) view.findViewById(R.id.intermediate_stop_description);
+            descView.setText(String.format("%s %s",
+                    stop.arrivalTime, stop.location.name));
+            return view;
         }
 
         private View inflateMessage(String messageType, String message,
@@ -459,6 +531,62 @@ public class RouteDetailActivity extends BaseListActivity {
             messageView.setText(message);
 
             return view;
+        }
+    }
+
+    private boolean isStarredJourney(JourneyQuery journeyQuery) {
+        String json;
+        try {
+            json = mJourneyQuery.toJson(false).toString();
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to convert journey to a json document.");
+            return false;
+        }
+
+        String[] projection = new String[] { Journeys.JOURNEY_DATA, };
+        Uri uri = Journeys.CONTENT_URI;
+        String selection = Journeys.STARRED + " = ? AND " + Journeys.JOURNEY_DATA + " = ?";
+        String[] selectionArgs = new String[] { "1", json };
+        Cursor cursor = managedQuery(uri, projection, selection, selectionArgs, null);
+
+        return cursor.getCount() > 0;
+    }
+
+    private class OnStarredJourneyButtonClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            String json;
+            try {
+                json = mJourneyQuery.toJson(false).toString();
+            } catch (JSONException e) {
+                Log.e(TAG, "Failed to convert journey to a json document.");
+                return;
+            }
+
+            ContentValues values = new ContentValues();
+            values.put(Journeys.JOURNEY_DATA, json);
+            Uri uri = Journeys.CONTENT_URI;
+            String where = Journeys.JOURNEY_DATA + "= ?";
+            String[] selectionArgs = new String[] { json };
+            // TODO: Replace button with a checkbox and check with that instead?
+            if (isStarredJourney(mJourneyQuery)) {
+                values.put(Journeys.STARRED, "0");
+                getContentResolver().update(
+                        uri, values, where, selectionArgs);
+                mFavoriteButton.setImageResource(
+                        android.R.drawable.star_big_off);
+            } else {
+                values.put(Journeys.STARRED, "1");
+                int affectedRows = getContentResolver().update(
+                        uri, values, where, selectionArgs);
+                if (affectedRows <= 0) {
+                    values.put(Journeys.STARRED, "1");
+                    getContentResolver().insert(
+                            Journeys.CONTENT_URI, values);
+                }
+                mFavoriteButton.setImageResource(
+                        android.R.drawable.star_big_on);
+            }
         }
     }
 }

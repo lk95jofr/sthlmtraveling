@@ -2,10 +2,14 @@ package com.markupartist.sthlmtraveling;
 
 import java.util.Map;
 
-import com.flurry.android.FlurryAgent;
-
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
+
+import com.flurry.android.FlurryAgent;
+import com.markupartist.android.widget.ActionBar;
+import com.markupartist.android.widget.actionbar.R;
 
 public class BaseListActivity extends ListActivity {
 
@@ -33,5 +37,25 @@ public class BaseListActivity extends ListActivity {
 
     protected void registerEvent(String event, Map<String, String> parameters) {
         FlurryAgent.onEvent(event, parameters);
+    }
+
+    protected ActionBar initActionBar(int menuResource) {
+        ActionBar actionBar = (ActionBar) findViewById(R.id.actionbar);
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+        actionBar.setDisplayShowHomeEnabled(true);
+        getMenuInflater().inflate(menuResource, actionBar.asMenu());
+        return actionBar;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.actionbar_item_home:
+            final Intent startIntent = new Intent(this, StartActivity.class);
+            startIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(startIntent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

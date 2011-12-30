@@ -21,6 +21,7 @@
     <string name="app_name">STHLM Traveling</string>
     <string name="from">Origen</string>
     <string name="to">Destino</string>
+    <string name="to">Via</string> <!-- TODO: Needs translation -->
     <string name="search_label">Buscar</string>
     <string name="departing">Salida</string>
     <string name="arriving">Llegada</string>
@@ -47,6 +48,8 @@
     <string name="send_email">Enviar un e-mail</string>
     <string name="favorites_label">Favoritos</string>
     <string name="no_favorites"><b>No hay favoritos aún...</b>\nAñade o borra favoritos pulsando el botón en forma de estrella después de una búsqueda.</string>
+    <string name="reverse_search">Reverse search</string>
+    <string name="delete">Delete</string>
     <string name="no_location_title">Problema de localización</string>
     <string name="no_location_message">Problema al determinar su localización.</string>
     <string name="network_problem_label">Problemas en la red</string>
@@ -78,7 +81,8 @@
     <string name="departures">Salidas</string>
     <string name="departures_for">Salidas desde <xliff:g id="site_name">%s</xliff:g></string>
     <string name="date_of_trip">Fecha del viaje: <xliff:g id="date">%s</xliff:g></string>
-    <string name="no_departures"><b>No hay salidas en este momento</b>\nSe muestran salidas dentro de 10 minutos. Por favor, vuelva a actualizar usando la opción del menú en un segundos.</string>
+    <string name="no_departures_for_transport_type">No hay salidas en este momento.</string>
+    <string name="no_departures">No hay salidas en este momento.</string>
     <string name="site_name">Ubicación</string>
     <string name="stop_label">Parada</string>
     <string name="refresh">Actualizar</string>
@@ -88,6 +92,10 @@
     <string name="trains">Trenes</string>
     <string name="trams">Tram</string>
     <string name="tram_cars">Tranvía</string>
+    <string name="departure_metro">Metro</string>
+    <string name="departure_bus">Bus</string>
+    <string name="departure_train">Train</string>
+    <string name="departure_tram">Lokalb.</string>
     <string name="now">ahora</string>
     <string name="journey_planner_label">Planear viaje</string>
     <string name="crash_report_mail_subject">STHLM Traveling Crash Report</string>
@@ -95,7 +103,8 @@
     <string name="my_location_source_disabled">Por favor habilita Mi Ubicación en la configuración del sistema</string>
     <string name="title_settings">Configuración</string>
     <string name="now_label">Ahora</string>
-    <string name="later_label">Después</string>
+    <string name="more_choices_label">More choices</string>
+    <string name="alternative_stops_label">Alternative stops</string>
     <string name="date_and_time_label">Fecha y hora</string>
     <string name="determining_your_position">Determinando su posición</string>
     <string name="back">Volver</string>
@@ -111,9 +120,34 @@
     <string name="sms_ticket_price_reduced">Tarifa reducida</string>
     <string name="sms_ticket_price_full">Tarifa general</string>
     <string name="sms_ticket_notice_message">Esta función es experimental, por favor compruebe los detalles antes de comprar su ticket. STHLM Traveling no puede garantizar que el ticket sea válido para su trayecto.</string>
-    <string name="trip_description_walk">%s - %s Andando desde %s hasta %s</string>
-    <string name="trip_description_normal">%s - %s %s desde %s dirección %s. Bajar en %s</string>
+    <string name="trip_description_walk" formatted="false">%s - %s Andando desde %s hasta %s</string>
+    <string name="trip_description_normal" formatted="false">%s - %s %s desde %s dirección %s. Bajar en %s</string>
     <string name="show_all">Mostrar todo</string>
+    <string name="platform">Platform</string>
+
+    <!-- Planner error messages -->
+    <string name="planner_error_title">Felmeddelande</string>
+    <string name="planner_error_unknown">Sökningen misslyckades.</string>
+    <string name="planner_error_H9300">Tyvärr kan din resa inte beräknas. Försök igen.</string>
+    <string name="planner_error_H9360">Fel i datumfältet.</string>
+    <string name="planner_error_H9380">Start, mål eller via är samma hållplats eller ligger för nära varandra.</string>
+    <string name="planner_error_H9320">Hållplatsnamnet finns inte.</string>
+    <string name="planner_error_H9280">Hållplatsnamnet finns inte.</string>
+    <string name="planner_error_H9260">Hållplatsnamnet finns inte.</string>
+    <string name="planner_error_H9250">Sökningen avbröts.</string>
+    <string name="planner_error_H9240">Inget svar kunde hittas.</string>
+    <string name="planner_error_H9230">Försök igen.</string>
+    <string name="planner_error_H9220">Det finns ingen hållplats i närheten av den angivna adressen.</string>
+    <string name="planner_error_H900">Det finns ingen aktuell tidtabell för den sökta resan.</string>
+    <string name="planner_error_H892">Resan blev för lång, prova att välja bort viahållplatsen.</string>
+    <string name="planner_error_H891">Ingen resa hittades, prova att välja en viahållplats.</string>
+    <string name="planner_error_H890">Ingen resa hittades.</string>
+    <string name="planner_error_H500">Ingen resa hittades.</string>
+    <string name="planner_error_H455">Förlängt uppehåll.</string>
+    <string name="planner_error_H410">Uppgifterna kan vara ofullständiga på grund av tidtabellsbyte.</string>
+    <string name="planner_error_H390">Start- eller målhållplatsen ersattes av en närbelägen hållplats.</string>
+    <string name="planner_error_H895">Start och mål ligger för nära varandra.</string>
+
     <!-- Preferences -->
     <string name="restart_app_for_full_effect">Reinicie la aplicación para la que los cambios surjan efecto.</string>
     <string name="dialog_general_preferences">Básico</string>

@@ -26,16 +26,11 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="#e4e4e4"
-            android:paddingTop="5dip"
+            android:padding="5dip"
             >
-            <LinearLayout
-                android:focusable="true" android:focusableInTouchMode="true"
-                android:layout_width="0px" android:layout_height="0px"
-            />
 	        <LinearLayout
 	            android:layout_width="fill_parent"
 	            android:layout_height="wrap_content"
-	            android:addStatesFromChildren="true"
 	            android:gravity="center_vertical"
 	            android:paddingTop="5dip"
 	            android:paddingBottom="10dip"
@@ -52,7 +47,7 @@
 		                android:hint="@string/from"
 		                android:dropDownWidth="fill_parent"
 		                android:dropDownVerticalOffset="5dip"
-		                android:layout_width="wrap_content"
+		                android:layout_width="match_parent"
 		                android:layout_height="fill_parent"
 		                android:textColor="#000"
 		                android:singleLine="true"
@@ -61,6 +56,8 @@
 		                android:lines="1"
 		                android:inputType="text"
 		                android:background="@null"
+		                android:nextFocusRight="@+id/from_menu"
+		                android:nextFocusDown="@+id/to"
 		                />
 				    <ProgressBar
 				        android:id="@+id/from_progress"
@@ -69,7 +66,7 @@
 				        android:layout_height="wrap_content"
 				        style="?android:attr/progressBarStyleSmall"
 				        android:layout_gravity="center_vertical"
-				        android:visibility="gone"
+				        android:visibility="invisible"
 				        />
 	            </LinearLayout>
 	            <ImageButton
@@ -85,7 +82,6 @@
             <LinearLayout 
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:addStatesFromChildren="true"
                 android:gravity="center_vertical"
                 android:paddingTop="5dip"
                 android:paddingBottom="10dip"
@@ -102,7 +98,7 @@
 	                    android:hint="@string/to"
 	                    android:dropDownWidth="fill_parent"
                         android:dropDownVerticalOffset="5dip"
-	                    android:layout_width="wrap_content"
+	                    android:layout_width="match_parent"
 	                    android:layout_height="fill_parent"
 	                    android:textColor="#000"
 	                    android:singleLine="true"
@@ -111,6 +107,9 @@
 	                    android:lines="1"
 	                    android:inputType="text"
 	                    android:background="@null"
+                        android:nextFocusRight="@+id/to_menu"
+                        android:nextFocusDown="@+id/planner_choose_time_group"
+                        android:nextFocusUp="@id/from"
 	                    />
                     <ProgressBar
                         android:id="@+id/to_progress"
@@ -119,7 +118,7 @@
                         android:layout_height="wrap_content"
                         style="?android:attr/progressBarStyleSmall"
                         android:layout_gravity="center_vertical"
-                        android:visibility="gone"
+                        android:visibility="invisible"
                         />
                 </LinearLayout>
                 <ImageButton
@@ -147,60 +146,21 @@
 		                android:textColor="#000"
 		                />
                     <RadioButton
-                        android:id="@+id/planner_check_later"
+                        android:id="@+id/planner_check_more_choices"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="15dip"
-                        android:text="@string/later_label"
+                        android:text="@string/more_choices_label"
                         android:textColor="#000"
                     />
             </RadioGroup>
             
-            <TableLayout
-                android:id="@+id/planner_change_time_layout"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:visibility="gone"
-                >
-                <TableRow>
-	                <Spinner 
-	                    android:id="@+id/departure_arrival_choice"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content"
-	                    android:drawSelectorOnTop="true"
-	                />
-                </TableRow>
-                <TableRow>
-	                <Button
-	                    android:id="@+id/planner_route_time"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content"
-	                    />
-	                <Button
-	                    android:id="@+id/planner_route_date"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content"
-	                    />
-                </TableRow>
-                <!--
-                <TableRow>
-                    <CheckBox
-                        android:id="@+id/planner_alternative_stops"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Alternative stops"
-                        android:textColor="#000"
-                        />
-                </TableRow>
-                -->
-            </TableLayout>
-            <!-- 
             <LinearLayout
                 android:id="@+id/planner_change_time_layout"
-                android:orientation="horizontal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:visibility="visible"
+                android:orientation="vertical"
+                android:visibility="gone"
                 >
                 <Spinner 
                     android:id="@+id/departure_arrival_choice"
@@ -208,18 +168,140 @@
                     android:layout_height="wrap_content"
                     android:drawSelectorOnTop="true"
                 />
-                <Button
-					android:id="@+id/planner_route_time"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
+	            <TableLayout
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                >
+	                <TableRow>
+	                    <Button
+	                        android:id="@+id/planner_route_time"
+	                        android:layout_width="wrap_content"
+	                        android:layout_height="wrap_content"
+	                        />
+	                    <Button
+	                        android:id="@+id/planner_route_date"
+	                        android:layout_width="wrap_content"
+	                        android:layout_height="wrap_content"
+	                        />
+	                </TableRow>
+	            </TableLayout>
+
+                <!-- Via -->
+                <LinearLayout 
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:addStatesFromChildren="true"
+                    android:gravity="center_vertical"
+                    android:paddingTop="5dip"
+                    android:paddingBottom="10dip"
+                    android:paddingLeft="3dip"
+                    android:paddingRight="3dip">
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/textfield_search"
+                       >
+                        <AutoCompleteTextView 
+                            android:id="@+id/via"
+                            android:hint="@string/via"
+                            android:dropDownWidth="fill_parent"
+                            android:dropDownVerticalOffset="5dip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="fill_parent"
+                            android:textColor="#000"
+                            android:singleLine="true"
+                            android:layout_weight="1"
+                            android:imeOptions="actionDone"
+                            android:lines="1"
+                            android:inputType="text"
+                            android:background="@null"
+                            />
+                        <ProgressBar
+                            android:id="@+id/via_progress"
+                            android:indeterminate="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="?android:attr/progressBarStyleSmall"
+                            android:layout_gravity="center_vertical"
+                            android:visibility="invisible"
+                            />
+                    </LinearLayout>
+                    <ImageButton
+                        android:id="@+id/via_menu"
+                        android:src="@drawable/ic_input_get"
+                        android:layout_width="wrap_content"
+                        android:layout_height="fill_parent"
+                        android:paddingLeft="5dip"
+                        android:paddingRight="5dip"
+                        android:background="@drawable/btn_search_dialog"
+                        />
+                </LinearLayout>
+
+                <CheckBox
+                    android:id="@+id/planner_alternative_stops"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/alternative_stops_label"
                     />
-                <Button
-					android:id="@+id/planner_route_date"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
+				<View
+					android:layout_width="fill_parent"
+					android:layout_height="1px"
+                    android:layout_marginTop="10dip"
+                    android:layout_marginBottom="10dip"
+					android:background="@drawable/stroke"
 					/>
+					
+                <CheckBox
+                    android:id="@+id/planner_transport_metro"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/metros"
+                    android:checked="true"
+                    />
+                <CheckBox
+                    android:id="@+id/planner_transport_bus"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/buses"
+                    android:checked="true"
+                    />
+                <CheckBox
+                    android:id="@+id/planner_transport_tram"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/trams"
+                    android:checked="true"
+                    />
+                <CheckBox
+                    android:id="@+id/planner_transport_train"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/trains"
+                    android:checked="true"
+                    />
+                <CheckBox
+                    android:id="@+id/planner_transport_fly"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Flygbussar"
+                    android:checked="true"
+                    />
+                <CheckBox
+                    android:id="@+id/planner_transport_wax"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Waxholmsbolagets båttrafik"
+                    android:checked="true"
+                    />
+                <CheckBox
+                    android:id="@+id/planner_transport_nar"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Närtrafiken"
+                    android:checked="false"
+                    />
             </LinearLayout>
-             -->
             <Button
                 android:layout_marginTop="5dip"
 				android:id="@+id/search_route"

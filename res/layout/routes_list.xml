@@ -17,38 +17,35 @@
 */
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-    <include layout="@layout/route_header" />
-    <ImageView
+    <com.markupartist.android.widget.ActionBar
+        android:id="@+id/actionbar"
+        style="@style/ActionBar"
+        />
+    <!-- <ImageView
         android:layout_width="fill_parent"
         android:layout_height="1px"
         android:src="@drawable/stroke"
-        />
-	<ListView
-	    style="@style/AppListView"
-	    android:id="@+id/android:list"
-	    android:layout_width="fill_parent" 
-	    android:layout_height="fill_parent"
-        />
-	<!--
-    <ListView 
-        android:id="@+id/earlier_later_routes"
-        android:layout_width="fill_parent"
+        /> -->
+    <RelativeLayout
+        android:id="@+id/ad_holder"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        >
+        <include layout="@layout/ad"/>
+    </RelativeLayout>
+    <ListView
+        android:layout_below="@id/actionbar"
+        android:layout_above="@id/ad_holder"
+        style="@style/AppListView"
+        android:id="@id/android:list"
+        android:layout_width="fill_parent" 
+        android:layout_height="fill_parent"
         />
-    <TextView
-        style="?android:attr/listSeparatorTextViewStyle"
-        android:text="Routes"
-        android:layout_marginTop="0dip"
-        />
-    <ListView 
-    	android:id="@+id/android:list"
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-		/>
-	-->
-</LinearLayout>
+    <include layout="@layout/progress_bar" android:id="@id/android:empty" />
+</RelativeLayout>
 
