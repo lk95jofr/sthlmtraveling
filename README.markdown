@@ -11,7 +11,8 @@ Transport (SL, Stockholms Lokaltrafik).
 Vote for features at http://bit.ly/sthlmt
 
 More about this project at <http://markupartist.com/sthlmtraveling> or follow 
-me on [twitter](http://twitter.com/johanni) where I announce new versions.
+me on twitter at [@johanni](http://twitter.com/johanni) or [@sthlmtraveling](http://twitter.com/sthlmtraveling)
+where new versions is announced.
 
 Some screen shots can be found at [Flickr](http://www.flickr.com/photos/johannilsson/tags/sthlmtraveling/).
 
@@ -26,7 +27,6 @@ Credits
 -------
 * App icon, concepts & ideas Olof Brickarp
 * Icons by [Fredrik Broman](http://fredrikbroman.com)
-* Patches by [Morgan Christiansson, Screen Interaction AB](http://screeninteraction.com)
 * Feedback, suggestions & test by [Swedroid users](http://swedroid.se)
 * Also great thanks to my Twitter and Flickr followers for their suggestions 
   and feedback
@@ -39,6 +39,11 @@ fork the app. I will do my best help you out if you have any problems.
 
 Please follow the [Code Style Guidelines for Contributors](http://source.android.com/source/code-style.html)
 for Android except for line length that should be kept to 80 colums where possible.  
+
+### Dependencies
+
+* [Android ActionBar](https://github.com/johannilsson/android-actionbar) - mimic-native-api
+* [View Pager Indicator](http://viewpagerindicator.com/) - v2.2.2
 
 ### Run tests
 
@@ -59,6 +64,18 @@ application and the tests application deployed before.
 
 Changelog
 ---------
+* 2.4.0
+    * Add swipe between tabs and port to fragments by [Robert Johansson](https://twitter.com/#!/likebobby).
+    * Add support for Arlanda Express.
+    * Add support for intermediate stops.
+    * Add Holo theme for API level 14+.
+    * Various style fixes.
+    * Add proper default selection in departures.
+    * Add proper name of My Location when used as destination.
+    * Add support for using the keyboard software search button from departure
+      search.
+    * Fixed bug in departure when no Site was selected.
+    * Improve validation of user input.
 * 2.3.10
     * Adapted deviation to new API.
     * Adapted traffic status to new API.

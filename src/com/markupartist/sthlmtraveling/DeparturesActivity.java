@@ -24,6 +24,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.content.res.Configuration;
@@ -471,6 +472,14 @@ public class DeparturesActivity extends BaseListActivity {
                                 mSiteAlternatives.get(which));
                     }
                 })
+                .setOnCancelListener(new OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        // We need a site to proceed, finish the activity here
+                        // is most likely what the user intended.
+                        finish();
+                    }
+                })
                 .create();
         case DIALOG_GET_SITES_NETWORK_PROBLEM:
             return DialogHelper.createNetworkProblemDialog(this, new OnClickListener() {
@@ -537,6 +546,7 @@ public class DeparturesActivity extends BaseListActivity {
      */
     private class GetSitesTask extends AsyncTask<String, Void, ArrayList<Site>> {
         private boolean mWasSuccess = true;
+        private String mSearchQuery;
 
         @Override
         public void onPreExecute() {
@@ -545,8 +555,9 @@ public class DeparturesActivity extends BaseListActivity {
 
         @Override
         protected ArrayList<Site> doInBackground(String... params) {
+            mSearchQuery = params[0];
             try {
-                return SitesStore.getInstance().getSite(params[0]);
+                return SitesStore.getInstance().getSite(mSearchQuery);
             } catch (IOException e) {
                 mWasSuccess = false;
                 return null;
@@ -561,6 +572,13 @@ public class DeparturesActivity extends BaseListActivity {
                 if (result.size() == 1) {
                     new GetDeparturesTask().execute(result.get(0));
                 } else {
+                    // Has exact match?
+                    for (Site site : result) {
+                        if (site.getName().equals(mSearchQuery)) {
+                            new GetDeparturesTask().execute(result.get(0));
+                            return;
+                        }
+                    }
                     mSiteAlternatives = result;
                     try {
                         showDialog(DIALOG_SITE_ALTERNATIVES);
@@ -599,7 +617,15 @@ public class DeparturesActivity extends BaseListActivity {
         protected Departures doInBackground(Site... params) {
             try {
                 mSite = params[0];
-                
+
+                DeparturesStore departures = new DeparturesStore();
+                Departures result = departures.find(params[0]);
+
+                if (mPreferredTrafficMode < 1 && !result.servesTypes.isEmpty()) {
+                    String transportMode = result.servesTypes.get(0);
+                    mPreferredTrafficMode = TransportMode.getIndex(transportMode);
+                }
+
                 if (mPlaceId == -1) {
                     String[] projection = new String[] {
                                                  Places._ID,
@@ -618,8 +644,7 @@ public class DeparturesActivity extends BaseListActivity {
                     }
                 }
 
-                DeparturesStore departures = new DeparturesStore();
-                return departures.find(params[0]);
+                return result;
             } catch (IllegalArgumentException e) {
                 mWasSuccess = false;
                 return null;

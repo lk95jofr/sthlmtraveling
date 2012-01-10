@@ -41,7 +41,7 @@
     <string name="change_date_and_time">Change date &amp; time</string>
     <string name="reverse_start_end">Reverse from &amp; to</string>
     <string name="about">About</string>
-    <string name="about_this_app">STHLM Traveling is developed by Johan Nilsson. Please contact him if you have ideas or experience any problems using the Feedback button.\n\nAll traffic data is gathered with permission from SL - Stockholm Public Transport.\n\nTo improve the app further anonymous analytics is gathered with Flurry, http://flurry.com.\n\n<b>Credits</b>\n<li>App icon &amp; ideas Olof Brickarp\nhttp://www.yay.se</li>\n<li>Swedish translation Jean Diarbakerli</li>\n<li>Spanish translation Valeria Padilla and Miguel Ángel Domínguez Coloma</li>\n<li>Patches by Fredrik Jönsson\nhttp://github.com/lk95jofr</li>\n<li>Patches by Adam Nybäck\nhttp://anyro.se</li>\n<li>Patches by Morgan Christiansson\nhttp://screeninteraction.com</li>\n<li>Icons by Fredrik Broman\nhttp://fredrikbroman.com</li>\n<li>Icons by Android Icons\nhttp://androidicons.com</li>\n<li>Feedback from Swedroid\nhttp://swedroid.se</li>\n\nSource code http://github.com/johannilsson/sthlmtraveling</string>
+    <string name="about_this_app">STHLM Traveling is developed by Johan Nilsson. Please contact him if you have ideas or experience any problems using the Feedback button.\n\nAll traffic data is gathered with permission from SL - Stockholm Public Transport.\n\nTo improve the app further anonymous analytics is gathered with Flurry, http://flurry.com.\n\n<b>Credits</b>\n<li>Robert Johansson\nhttps://twitter.com/likebobby</li>\n<li>App icon &amp; ideas Olof Brickarp\nhttp://www.yay.se</li>\n<li>Swedish translation Jean Diarbakerli</li>\n<li>Spanish translation Valeria Padilla and Miguel Ángel Domínguez Coloma</li>\n<li>Patches by Fredrik Jönsson\nhttp://github.com/lk95jofr</li>\n<li>Patches by Adam Nybäck\nhttp://anyro.se</li>\n<li>Patches by Morgan Christiansson\nhttp://screeninteraction.com</li>\n<li>Icons by Fredrik Broman\nhttp://fredrikbroman.com</li>\n<li>Icons by Android Icons\nhttp://androidicons.com</li>\n<li>Feedback from Swedroid\nhttp://swedroid.se</li>\n\nSource code http://github.com/johannilsson/sthlmtraveling</string>
     <string name="donate">Donate</string>
     <string name="donate_url">http://pledgie.com/campaigns/6527</string>
     <string name="feedback">Feedback</string>
@@ -118,12 +118,16 @@
     <string name="share_label">Share</string>
     <string name="sms_ticket_label">SMS Ticket</string>
     <string name="sms_ticket_price_reduced">Reduced price</string>
-    <string name="sms_ticket_price_full">Full price (20-64 yrs)</string>
+    <string name="sms_ticket_price_full">Full price (20–64 yrs)</string>
     <string name="sms_ticket_notice_message">This function is experimental, please verify the details before you buy your ticket. STHLM Traveling can\'t garantuee that the ticket is valid for your journey.</string>
     <string name="trip_description_walk" formatted="false">%s - %s Walk from %s to %s</string>
     <string name="trip_description_normal" formatted="false">%s - %s %s from %s towards %s. Get off at %s</string>
     <string name="show_all">Show all</string>
     <string name="platform">Platform</string>
+    <string name="no_intermediate_stops">No indermediate stops were found.</string>
+    <string name="show_intermediate_stops">Show intermediate stops</string>
+    <string name="hide_intermediate_stops">Hide intermediate stops</string>
+    
 
     <!-- Planner error messages -->
     <string name="planner_error_title">Felmeddelande</string>

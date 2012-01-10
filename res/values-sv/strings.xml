@@ -41,7 +41,7 @@
     <string name="change_date_and_time">Ändra datum &amp; tid</string>
     <string name="reverse_start_end">Ändra ordning på från &amp; till</string>
     <string name="about">Om</string>
-    <string name="about_this_app">STHLM Traveling är utvecklat av Johan Nilsson. Kontakta honom om du har idéer på vidare förbättringar eller vid problem via Feedback-knappen.\n\nAll trafikdata är hämtad från AB Storstockholms Lokaltrafik.\n\nFör att kunna förbättra appen samlas anonym data kring användning in mha Flurry Analytics, http://flurry.com.\n\n<b>Credits</b>\n<li>Programikon &amp; idéer av Olof Brickarp\nhttp://www.yay.se</li>\n<li>Svensk översättning Jean Diarbakerli</li>\n<li>Spansk översättning Valeria Padilla and Miguel Ángel Domínguez Coloma</li>\n<li>Patchar av Fredrik Jönsson\nhttp://github.com/lk95jofr</li>\n<li>Patchar av Adam Nybäck\nhttp://anyro.se</li>\n<li>Patchar av Morgan Christiansson\nhttp://screeninteraction.com</li>\n<li>Ikoner av Fredrik Broman\nhttp://fredrikbroman.com</li>\n<li>Ikoner av Android Icons\nhttp://androidicons.com</li>\n<li>Feedback från Swedroid\nhttp://swedroid.se</li>\n\nKällkod på http://github.com/johannilsson/sthlmtraveling</string>
+    <string name="about_this_app">STHLM Traveling är utvecklat av Johan Nilsson. Kontakta honom om du har idéer på vidare förbättringar eller vid problem via Feedback-knappen.\n\nAll trafikdata är hämtad från AB Storstockholms Lokaltrafik.\n\nFör att kunna förbättra appen samlas anonym data kring användning in mha Flurry Analytics, http://flurry.com.\n\n<b>Credits</b>\n<li>Robert Johansson\nhttps://twitter.com/likebobby</li>\n<li>Programikon &amp; idéer av Olof Brickarp\nhttp://www.yay.se</li>\n<li>Svensk översättning Jean Diarbakerli</li>\n<li>Spansk översättning Valeria Padilla and Miguel Ángel Domínguez Coloma</li>\n<li>Patchar av Fredrik Jönsson\nhttp://github.com/lk95jofr</li>\n<li>Patchar av Adam Nybäck\nhttp://anyro.se</li>\n<li>Patchar av Morgan Christiansson\nhttp://screeninteraction.com</li>\n<li>Ikoner av Fredrik Broman\nhttp://fredrikbroman.com</li>\n<li>Ikoner av Android Icons\nhttp://androidicons.com</li>\n<li>Feedback från Swedroid\nhttp://swedroid.se</li>\n\nKällkod på http://github.com/johannilsson/sthlmtraveling</string>
     <string name="donate">Donera</string>
     <string name="donate_url">http://pledgie.com/campaigns/6527</string>
     <string name="feedback">Feedback</string>
@@ -118,13 +118,16 @@
     <string name="share_label">Dela med andra</string>
     <string name="sms_ticket_label">SMS-Biljett</string>
     <string name="sms_ticket_price_reduced">Reducerat pris</string>
-    <string name="sms_ticket_price_full">Helt pris (20-64 år)</string>
+    <string name="sms_ticket_price_full">Helt pris (20–64 år)</string>
     <string name="sms_ticket_notice_message">Den här funtionen är experimentell. Dubbelkolla detaljerna innan du köper din biljett. STHLM Traveling lämnar inga garantier för att biljetten stämmer med resan.</string>
     <string name="trip_description_walk" formatted="false">%s - %s Gå från %s till %s</string>
     <string name="trip_description_normal" formatted="false">%s - %s %s från %s mot %s. Kliv av vid %s</string>
     <string name="show_all">Visa alla</string>
     <string name="platform">Plattform</string>
-
+    <string name="no_intermediate_stops">Inga mellanliggande hållplatser hittades.</string>
+    <string name="show_intermediate_stops">Via mellanliggande hållplatser</string>
+    <string name="hide_intermediate_stops">Dölj mellanliggande hållplatser</string>
+    
     <!-- Planner error messages -->
     <string name="planner_error_title">Felmeddelande</string>
     <string name="planner_error_unknown">Sökningen misslyckades.</string>
